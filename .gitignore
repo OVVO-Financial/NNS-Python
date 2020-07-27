@@ -1,1 +1,7 @@
+.coverage
 .idea
+.pytest_cache
+tests/.pytest_cache
+NNS.egg-info/*
+NNS/__pycache__/*
+tests/unit/NNS/__pycache__*

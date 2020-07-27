@@ -61,6 +61,6 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=["numpy==1.19.0", "pandas==1.0.5", "scikit_learn==0.23.1",],
+    install_requires=["numpy>=1.19.0", "pandas>=1.0.5", "scikit_learn>=0.23.1",],
     extras_require={"test": ["pytest-cov==2.10.0", "pytest==5.4.3"],},
 )
