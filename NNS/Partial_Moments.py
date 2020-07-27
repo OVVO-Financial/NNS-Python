@@ -7,9 +7,7 @@ def pd_fill_diagonal(df_matrix: pd.DataFrame, value) -> None:
     df_matrix.values[tuple([np.arange(n)] * 2)] = value
 
 
-def LPM(
-    degree: [int, float], target: [int, float, str, None], variable: [pd.Series, float, int]
-) -> float:
+def LPM(degree: [int, float], target: [int, float, str, None], variable: pd.Series) -> float:
     r"""
     Lower Partial Moment
 
@@ -30,7 +28,7 @@ def LPM(
 
     if target is None:
         target = variable.mean()
-    if isinstance(target, str): # "mean"
+    if isinstance(target, str):  # "mean"
         target = getattr(variable, target)()
     if degree == 0:
         return (variable <= target).mean()
@@ -38,9 +36,7 @@ def LPM(
     return ((target - (variable[variable <= target])) ** degree).sum() / variable.shape[0]
 
 
-def UPM(
-    degree: [int, float], target: [int, float, str, None], variable: [pd.Series, float, int]
-) -> float:
+def UPM(degree: [int, float], target: [int, float, str, None], variable: pd.Series) -> float:
     r"""
     Upper Partial Moment
 
@@ -61,7 +57,7 @@ def UPM(
 
     if target is None:
         target = variable.mean()
-    if isinstance(target, str): # "mean"
+    if isinstance(target, str):  # "mean"
         target = getattr(variable, target)()
     if degree == 0:
         return (variable > target).mean()
@@ -102,9 +98,9 @@ def Co_UPM(
         target_x = x.mean()
     if target_y is None:
         target_y = y.mean()
-    if isinstance(target_x, str): # "mean"
+    if isinstance(target_x, str):  # "mean"
         target_x = getattr(x, target_x)()
-    if isinstance(target_y, str): # "mean"
+    if isinstance(target_y, str):  # "mean"
         target_Y = getattr(y, target_y)()
 
     z = pd.DataFrame({"x": x, "y": y})
@@ -152,10 +148,10 @@ def Co_LPM(
         target_x = x.mean()
     if target_y is None:
         target_y = y.mean()
-    if isinstance(target_x, str): # "mean"
+    if isinstance(target_x, str):  # "mean"
         target_x = getattr(x, target_x)()
-    if isinstance(target_y, str): # "mean"
-        target_Y = getattr(y, target_y)()
+    if isinstance(target_y, str):  # "mean"
+        target_y = getattr(y, target_y)()
 
     z = pd.DataFrame({"x": x, "y": y})
     # z <- t(c(target.x, target.y) - t(z))
@@ -203,10 +199,10 @@ def D_LPM(
         target_x = x.mean()
     if target_y is None:
         target_y = y.mean()
-    if isinstance(target_x, str): # "mean"
+    if isinstance(target_x, str):  # "mean"
         target_x = getattr(x, target_x)()
-    if isinstance(target_y, str): # "mean"
-        target_Y = getattr(y, target_y)()
+    if isinstance(target_y, str):  # "mean"
+        target_y = getattr(y, target_y)()
     z = pd.DataFrame({"x": x, "y": y})
     #   z[,1] <- z[,1] - target.x
     #   z[,2] <- target.y - z[,2]
@@ -254,10 +250,10 @@ def D_UPM(
         target_x = x.mean()
     if target_y is None:
         target_y = y.mean()
-    if isinstance(target_x, str): # "mean"
+    if isinstance(target_x, str):  # "mean"
         target_x = getattr(x, target_x)()
-    if isinstance(target_y, str): # "mean"
-        target_Y = getattr(y, target_y)()
+    if isinstance(target_y, str):  # "mean"
+        target_y = getattr(y, target_y)()
     z = pd.DataFrame({"x": x, "y": y})
     # z[,1] <- target.x - z[,1]
     # z[,2] <- z[,2] - target.y
@@ -368,8 +364,8 @@ def PM_matrix(
             #            dlpms[[i]] <- sapply(1 : n, function(b)
             #            D.LPM(x = variable[ , i], y = variable[ , b], degree.x = UPM.degree, degree.y = LPM.degree, target.x = target[i], target.y = target[b]))
             if cur_var == cur_var2:
-                dlpms[i].append(0.)
-                dupms[i].append(0.)
+                dlpms[i].append(0.0)
+                dupms[i].append(0.0)
             else:
                 dlpms[i].append(
                     D_LPM(
@@ -407,14 +403,14 @@ def PM_matrix(
     # colnames(dlpm.matrix) <- colnames(variable)
     # rownames(dlpm.matrix) <- colnames(variable)
     dlpm_matrix = pd.DataFrame(dlpms, index=variable.columns, columns=variable.columns).T
-    #pd_fill_diagonal(dlpm_matrix, 0.0)
+    # pd_fill_diagonal(dlpm_matrix, 0.0)
 
     # dupm.matrix <- matrix(unlist(dupms), n, n)
     # diag(dupm.matrix) <- 0
     # colnames(dupm.matrix) <- colnames(variable)
     # rownames(dupm.matrix) <- colnames(variable)
     dupm_matrix = pd.DataFrame(dupms, index=variable.columns, columns=variable.columns).T
-    #pd_fill_diagonal(dupm_matrix, 0.0)
+    # pd_fill_diagonal(dupm_matrix, 0.0)
 
     if pop_adj:
         # adjustment <- length(variable[ , 1]) / (length(variable[ , 1]) - 1)
@@ -438,23 +434,30 @@ def PM_matrix(
 
 def LPM_ratio(degree: [int, float], target: [int, float, str, None], variable: pd.Series) -> float:
     lpm = LPM(degree, target, variable)
-    if(degree>0):
+    if degree > 0:
         area = lpm + UPM(degree, target, variable)
     else:
         area = 1
-    return(lpm / area)
+    return lpm / area
+
 
 def UPM_ratio(degree: [int, float], target: [int, float, str, None], variable: pd.Series) -> float:
     upm = UPM(degree, target, variable)
-    if(degree>0):
+    if degree > 0:
         area = LPM(degree, target, variable) + upm
     else:
         area = 1
-    return(upm / area)
+    return upm / area
 
 
-def NNS_PDF(variable: pd.Series, degree: [int, float] = 1, target: [float, int, str, None] = None, bins: [int, None] = None , plot: bool = True) -> pd.DataFrame:
-    if target is None
+def NNS_PDF(
+    variable: pd.Series,
+    degree: [int, float] = 1,
+    target: [float, int, str, None] = None,
+    bins: [int, None] = None,
+    plot: bool = True,
+) -> pd.DataFrame:
+    if target is None:
         target = variable.sort_values()
     # d/dx approximation
     if bins is None:
@@ -494,180 +497,262 @@ def NNS_PDF(variable: pd.Series, degree: [int, float] = 1, target: [float, int, 
 
         # TODO: Understand R density()$bw function
         bins = 4
-        #bins = density(variable)$bw
+        # bins = density(variable)$bw
         tgt = np.arange(target.min(), target.max(), bins)
     else:
         d_dx = (target.max().abs() + target.min().abs()) / bins
         tgt = np.arange(target.min(), target.max(), d_dx)
-    CDF = NNS_CDF(variable=variable, degree = degree, target=None, type="CDF", plot = False)['Function']
+
+    # TODO: Check return of function CDF and ['function'] dict
+    CDF = NNS_CDF(variable=variable, degree=degree, target=None, type="CDF", plot=False)["Function"]
 
     # TODO: find function dy.dx()
     PDF = np.maximum(
-        dy.dx(unlist(CDF[,1]), unlist(CDF[,2]), eval.point = tgt, deriv.method = "FD")$First
-        ,0
+        dy.dx(unlist(CDF[:, 1]), unlist(CDF[:, 2]), eval_point=tgt, deriv_method="FD")["First"], 0.0
     )
-    if(plot):
+    if plot:
         # TODO: convert ```{R} plot(tgt, PDF, col = 'steelblue', type = 'l', lwd = 3, xlab = "X", ylab = "Density")```
-        #plot(tgt, PDF, col = 'steelblue', type = 'l', lwd = 3, xlab = "X", ylab = "Density")
+        # plot(tgt, PDF, col = 'steelblue', type = 'l', lwd = 3, xlab = "X", ylab = "Density")
         pass
-    #TODO: convert ```{R} return (data.table::data.table(cbind("Intervals" = tgt, PDF))) ```
+    # TODO: convert ```{R} return (data.table::data.table(cbind("Intervals" = tgt, PDF))) ```
     return pd.DataFrame()
 
 
-
-def NNS_CDF(variable: [pd.Series, pd.DataFrame], degree: [float, int] = 0, target: [float, int, None] = None, type: str = "CDF", plot: bool = True) -> dict:
+def NNS_CDF(
+    variable: [pd.Series, pd.DataFrame],
+    degree: [float, int] = 0,
+    target: [float, int, None] = None,
+    type: str = "CDF",
+    plot: bool = True,
+) -> dict:
     if target is not None:
-        if isinstance(variable, pd.Series) or variable.shape[1]==1:
+        # TODO: use iloc[] / loc[]
+        if isinstance(variable, pd.Series) or variable.shape[1] == 1:
             if target < variable.min() or target > variable.max():
-                raise ValueError("Please make sure target is within the observed values of variable.")
+                raise ValueError(
+                    "Please make sure target is within the observed values of variable."
+                )
         else:
-            if target[1] < variable[,1].min() or target[1] > variable[,1].max():
-                raise ValueError("Please make sure target 1 is within the observed values of variable 1.")
-            if target[2] < variable[,2].min() or target[2] > variable[,2].max():
-                raise ValueError("Please make sure target 2 is within the observed values of variable 2.")
-
-  type <- tolower(type)
-
-  if(!(type%in%c("cdf","survival", "hazard", "cumulative hazard"))) stop(paste("Please select a type from: ", "`CDF`, ", "`survival`, ",  "`hazard`, ", "`cumulative hazard`"))
-
-  if(is.null(dim(variable)) || dim(variable)[2] == 1){
-
-    overall_target <- sort(variable)
-    x <- overall_target
-
-    if(degree > 0){
-      CDF <- LPM.ratio(degree, overall_target, variable)
-    } else {
-      cdf_fun <- ecdf(x)
-      CDF <- cdf_fun(overall_target)
-    }
-
-
-    values <- cbind.data.frame(sort(variable), CDF)
-    colnames(values) <- c(deparse(substitute(variable)), "CDF")
-
-    if(!is.null(target)){
-      P <- LPM.ratio(degree, target, variable)
-    } else {
-      P <- NULL
-    }
-
-    ylabel <- "Probability"
-
-    if(type == "survival"){
-      CDF <- 1 - CDF
-      P <- 1 - P
-    }
-
-
-    if(type == "hazard"){
-      CDF <- exp(log(density(x, n = length(x))$y)-log(1-CDF))
-
-      ylabel <- "h(x)"
-      P <- NNS.reg(x[-length(x)], CDF[-length(x)], order = "max", point.est = c(x[length(x)], target), plot = FALSE)$Point.est
-      CDF[is.infinite(CDF)] <- P[1]
-      P <- P[-1]
-    }
-
-
-    if(type == "cumulative hazard"){
-      CDF <- -log((1 - CDF))
-
-      ylabel <- "H(x)"
-      P <- NNS.reg(x[-length(x)], CDF[-length(x)], order = "max", point.est = c(x[length(x)], target), plot = FALSE)$Point.est
-
-      CDF[is.infinite(CDF)] <- P[1]
-      P <- P[-1]
-    }
-
-
-    if(plot){
-      plot(x, CDF, pch = 19, col = 'steelblue', xlab = deparse(substitute(variable)), ylab = ylabel, main = toupper(type), type = "s", lwd = 2)
-      points(x, CDF, pch = 19, col = 'steelblue')
-      lines(x, CDF, lty=2, col = 'steelblue')
-
-      if(!is.null(target)){
-          segments(target,0,target,P, col = "red", lwd = 2, lty = 2)
-          segments(min(variable), P, target, P, col = "red", lwd = 2, lty = 2)
-          points(target, P, col = "green", pch = 19)
-          mtext(text = round(P,4), col = "red", side = 2, at = P,  las = 2)
-          mtext(text = round(target,4), col = "red", side = 1, at = target,  las = 1)
-      }
-    }
-
-    values <- data.table::data.table(cbind.data.frame(x, CDF))
-    colnames(values) <- c(deparse(substitute(variable)), ylabel)
-
-
-    return(list("Function" = values ,
-                "target.value" = P))
-
-  } else {
-    overall_target_1 <- (variable[,1])
-    overall_target_2 <- (variable[,2])
-
-    CDF <- Co.LPM(degree,degree, sort(variable[,1]), sort(variable[,2]), overall_target_1, overall_target_2) /
-                (
-                 Co.LPM(degree,degree, sort(variable[,1]), sort(variable[,2]), overall_target_1, overall_target_2) +
-                 Co.UPM(degree,degree, sort(variable[,1]), sort(variable[,2]), overall_target_1, overall_target_2) +
-                 D.UPM(degree,degree, sort(variable[,1]), sort(variable[,2]), overall_target_1, overall_target_2) +
-                 D.LPM(degree,degree, sort(variable[,1]), sort(variable[,2]), overall_target_1, overall_target_2)
+            if target[1] < variable[:, 1].min() or target[1] > variable[:, 1].max():
+                raise ValueError(
+                    "Please make sure target 1 is within the observed values of variable 1."
+                )
+            if target[2] < variable[:, 2].min() or target[2] > variable[:, 2].max():
+                raise ValueError(
+                    "Please make sure target 2 is within the observed values of variable 2."
                 )
 
-    if(type == "survival"){
-        CDF <- 1 - CDF
-    }
+    cdf_type = type.lower().strip()
+    if cdf_type not in ["cdf", "survival", "hazard", "cumulative hazard"]:
+        raise ValueError("Please select a type from: [CDF, survival, hazard, cumulative hazard]")
 
-    if(type == "hazard"){
-        CDF <- sort(variable) / (1 - CDF)
-    }
+    if isinstance(variable, pd.Series) or variable.shape[1] == 1:
+        overall_target = variable.sort_values()
+        x = overall_target
+        if degree > 0:
+            # TODO: check if target can be an pd.series/np.ndarray
+            CDF = LPM_ratio(degree=degree, target=overall_target, variable=variable)
+        else:
+            # TODO: ecdf function
+            cdf_fun = ecdf(x)
+            CDF = cdf_fun(overall_target)
 
-    if(type == "cumulative hazard"){
-        CDF <- -log((1 - CDF))
-    }
+        values = pd.DataFrame({variable.name: variable.sort_values(), "CDF": CDF})
+        if target is not None:
+            P = LPM_ratio(degree=degree, target=target, variable=variable)
+        else:
+            P = None
 
+        ylabel = "Probability"
 
-    if(!is.null(target)){
-      P <- Co.LPM(degree,degree, variable[,1], variable[,2], target[1], target[2]) /
-                (
-                  Co.LPM(degree,degree, variable[,1], variable[,2], target[1], target[2]) +
-                  Co.UPM(degree,degree, variable[,1], variable[,2], target[1], target[2]) +
-                  D.LPM(degree,degree, variable[,1], variable[,2], target[1], target[2]) +
-                  D.UPM(degree,degree, variable[,1], variable[,2], target[1], target[2])
+        if cdf_type == "survival":
+            CDF = 1 - CDF
+            P = 1 - P
+        elif cdf_type == "hazard":
+            # TODO: R density function
+            CDF = np.exp(np.log(density(x, n=x.shaṕe[1])["y"]) - np.log(1 - CDF))
+            ylabel = "h(x)"
+            P = NNS_reg(
+                x[-x.shape[1]],
+                CDF[-x.shape[1]],
+                order="max",
+                point_est=c(x[x.shape[1]], target),
+                plot=False,
+            )["Point.est"]
+            CDF[np.isinf(CDF)] = P[1]
+            P = P[-1]
+        elif cdf_type == "cumulative hazard":
+            CDF = -np.log((1 - CDF))
+            ylabel = "H(x)"
+            P = NNS_reg(
+                x[-x.shape[1]],
+                CDF[-x.shape[1]],
+                order="max",
+                point_est=c(x[x.shape[1]], target),
+                plot=False,
+            )["Point.est"]
+            CDF[np.isinf(CDF)] = P[1]
+            P = P[-1]
+        if plot:
+            # TODO matplotlib like:
+            pass
+            if False:
+                plot(
+                    x,
+                    CDF,
+                    pch=19,
+                    col="steelblue",
+                    xlab=deparse(substitute(variable)),
+                    ylab=ylabel,
+                    main=toupper(type),
+                    type="s",
+                    lwd=2,
                 )
+                points(x, CDF, pch=19, col="steelblue")
+                lines(x, CDF, lty=2, col="steelblue")
+                if target is not None:
+                    segments(target, 0, target, P, col="red", lwd=2, lty=2)
+                    segments(min(variable), P, target, P, col="red", lwd=2, lty=2)
+                    points(target, P, col="green", pch=19)
+                    mtext(text=round(P, 4), col="red", side=2, at=P, las=2)
+                    mtext(text=round(target, 4), col="red", side=1, at=target, las=1)
+        values = pd.DataFrame({variable.name: x, ylabel: CDF})
+        return {"Function": values, "target.value": P}
+    else:
+        overall_target_1 = variable[:, 1]
+        overall_target_2 = variable[:, 2]
+        CDF = Co_LPM(
+            degree_x=degree,
+            degree_y=degree,
+            x=variable[:, 1].sort_values(),
+            y=variable[:, 2].sort_values(),
+            target_x=overall_target_1,
+            target_y=overall_target_2,
+        ) / (
+            Co_LPM(
+                degree_x=degree,
+                degree_y=degree,
+                x=variable[:, 1].sort_values(),
+                y=variable[:, 2].sort_values(),
+                target_x=overall_target_1,
+                target_y=overall_target_2,
+            )
+            + Co_UPM(
+                degree_x=degree,
+                degree_y=degree,
+                x=variable[:, 1].sort_values(),
+                y=variable[:, 2].sort_values(),
+                target_x=overall_target_1,
+                target_y=overall_target_2,
+            )
+            + D_UPM(
+                degree_x=degree,
+                degree_y=degree,
+                x=variable[:, 1].sort_values(),
+                y=variable[:, 2].sort_values(),
+                target_x=overall_target_1,
+                target_y=overall_target_2,
+            )
+            + D_LPM(
+                degree_x=degree,
+                degree_y=degree,
+                x=variable[:, 1].sort_values(),
+                y=variable[:, 2].sort_values(),
+                target_x=overall_target_1,
+                target_y=overall_target_2,
+            )
+        )
+        if cdf_type == "survival":
+            CDF = 1 - CDF
+        elif cdf_type == "hazard":
+            CDF = variable.sort_values() / (1 - CDF)
+        elif cdf_type == "cumulative hazard":
+            CDF = -np.log(1 - CDF)
+        if target is not None:
+            P = Co_LPM(
+                degree_x=degree,
+                degree_y=degree,
+                x=variable[:, 1],
+                y=variable[:, 2],
+                target_x=target[1],
+                target_y=target[2],
+            ) / (
+                Co_LPM(
+                    degree_x=degree,
+                    degree_y=degree,
+                    x=variable[:, 1],
+                    y=variable[:, 2],
+                    target_x=target[1],
+                    target_y=target[2],
+                )
+                + Co_UPM(
+                    degree_x=degree,
+                    degree_y=degree,
+                    x=variable[:, 1],
+                    y=variable[:, 2],
+                    target_x=target[1],
+                    target_y=target[2],
+                )
+                + D_LPM(
+                    degree_x=degree,
+                    degree_y=degree,
+                    x=variable[:, 1],
+                    y=variable[:, 2],
+                    target_x=target[1],
+                    target_y=target[2],
+                )
+                + D_UPM(
+                    degree_x=degree,
+                    degree_y=degree,
+                    x=variable[:, 1],
+                    y=variable[:, 2],
+                    target_x=target[1],
+                    target_y=target[2],
+                )
+            )
+        else:
+            P = None
 
-
-    } else {
-      P <- NULL
-    }
-
-    if(plot){
-      plot3d(variable[,1], variable[,2], CDF, col = "steelblue",
-             xlab = deparse(substitute(variable[,1])), ylab = deparse(substitute(variable[,2])),
-             zlab = "Probability", box = FALSE, pch = 19)
-
-      if(!is.null(target)){
-          points3d(target[1], target[2], P, col = "green", pch = 19)
-          points3d(target[1], target[2], 0, col = "red", pch = 15, cex = 2)
-          lines3d(x= c(target[1], max(variable[,1])),
-                  y= c(target[2], max(variable[,2])),
-                  z= c(P, P),
-                  col = "red", lwd = 2, lty=3)
-          lines3d(x= c(target[1], target[1]),
-                  y= c(target[2], target[2]),
-                  z= c(0, P),
-                  col = "red", lwd = 1, lty=3)
-          text3d(max(variable[,1]), max(variable[,2]), P, texts = paste0("P = ", round(P,4)), pos = 4, col = "red")
-      }
-
-    }
-
-  }
-
-  return(list("CDF" = data.table::data.table(cbind((variable), CDF = CDF)),
-              "P" = P))
-
-
-}
-
-
+        if plot:
+            # TODO: Matplotlib like
+            pass
+            if False:
+                plot3d(
+                    variable[:, 1],
+                    variable[:, 2],
+                    CDF,
+                    col="steelblue",
+                    xlab=variable[:, 1].name,
+                    ylab=variable[:, 2].name,
+                    zlab="Probability",
+                    box=False,
+                    pch=19,
+                )
+                if target is not None:
+                    points3d(target[1], target[2], P, col="green", pch=19)
+                    points3d(target[1], target[2], 0, col="red", pch=15, cex=2)
+                    lines3d(
+                        x=c(target[1], variable[:, 1].max()),
+                        y=c(target[2], variable[:, 2].max()),
+                        z=c(P, P),
+                        col="red",
+                        lwd=2,
+                        lty=3,
+                    )
+                    lines3d(
+                        x=c(target[1], target[1]),
+                        y=c(target[2], target[2]),
+                        z=c(0, P),
+                        col="red",
+                        lwd=1,
+                        lty=3,
+                    )
+                    text3d(
+                        variable[:, 1].max(),
+                        variable[:, 2].max(),
+                        P,
+                        texts=f"P = {round(P,4)}",
+                        pos=4,
+                        col="red",
+                    )
+    return {"CDF": pd.DataFrame({"variable": variable, "CDF": CDF}), "P": P}
