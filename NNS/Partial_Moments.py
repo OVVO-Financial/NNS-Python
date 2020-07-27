@@ -433,15 +433,73 @@ def PM_matrix(
 
 
 def LPM_ratio(degree: [int, float], target: [int, float, str, None], variable: pd.Series) -> float:
-    lpm = LPM(degree, target, variable)
+    r"""
+    Lower Partial Moment RATIO
+
+    This function generates a standardized univariate lower partial moment for any degree or target.
+    @param degree integer; \code{(degree = 0)} is frequency, \code{(degree = 1)} is area.
+    @param target numeric; Typically set to mean, but does not have to be. (Vectorized)
+    @param variable a numeric vector.
+    @return Standardized LPM of variable
+    @author Fred Viole, OVVO Financial Systems
+    @references Viole, F. and Nawrocki, D. (2013) "Nonlinear Nonparametric Statistics: Using Partial Moments"
+    \url{https://www.amazon.com/dp/1490523995}
+    @references Viole, F. (2017) "Continuous CDFs and ANOVA with NNS"
+    \url{https://ssrn.com/abstract=3007373}
+    @examples
+    set.seed(123)
+    x <- rnorm(100)
+    LPM.ratio(0, mean(x), x)
+
+    \dontrun{
+    ## Empirical CDF (degree = 0)
+    lpm_cdf <- LPM.ratio(0, sort(x), x)
+    plot(sort(x), lpm_cdf)
+
+    ## Continuous CDF (degree = 1)
+    lpm_cdf_1 <- LPM.ratio(1, sort(x), x)
+    plot(sort(x), lpm_cdf_1)
+
+    ## Joint CDF
+    x <- rnorm(5000) ; y <- rnorm(5000)
+    plot3d(x, y, Co.LPM(0, 0, sort(x), sort(y), x, y), col = "blue", xlab = "X", ylab = "Y",
+    zlab = "Probability", box = FALSE)
+    }
+    @export
+    """
+    lpm = LPM(degree=degree, target=target, variable=variable)
     if degree > 0:
-        area = lpm + UPM(degree, target, variable)
+        area = lpm + UPM(degree=degree, target=target, variable=variable)
     else:
         area = 1
     return lpm / area
 
 
 def UPM_ratio(degree: [int, float], target: [int, float, str, None], variable: pd.Series) -> float:
+    r"""
+    Upper Partial Moment RATIO
+
+    This function generates a standardized univariate upper partial moment for any degree or target.
+    @param degree integer; \code{(degree = 0)} is frequency, \code{(degree = 1)} is area.
+    @param target numeric; Typically set to mean, but does not have to be. (Vectorized)
+    @param variable a numeric vector.
+    @return Standardized UPM of variable
+    @author Fred Viole, OVVO Financial Systems
+    @references Viole, F. and Nawrocki, D. (2013) "Nonlinear Nonparametric Statistics: Using Partial Moments"
+    \url{https://www.amazon.com/dp/1490523995}
+    @examples
+    set.seed(123)
+    x <- rnorm(100)
+    UPM.ratio(0, mean(x), x)
+
+    ## Joint Upper CDF
+    \dontrun{
+    x <- rnorm(5000) ; y <- rnorm(5000)
+    plot3d(x, y, Co.UPM(0, 0, sort(x), sort(y), x, y), col = "blue", xlab = "X", ylab = "Y",
+    zlab = "Probability", box = FALSE)
+    }
+    @export
+    """
     upm = UPM(degree, target, variable)
     if degree > 0:
         area = LPM(degree, target, variable) + upm
@@ -457,6 +515,7 @@ def NNS_PDF(
     bins: [int, None] = None,
     plot: bool = True,
 ) -> pd.DataFrame:
+    # TODO: CONVERT/TEST
     if target is None:
         target = variable.sort_values()
     # d/dx approximation
@@ -525,6 +584,7 @@ def NNS_CDF(
     type: str = "CDF",
     plot: bool = True,
 ) -> dict:
+    # TODO: CONVERT/TEST
     if target is not None:
         # TODO: use iloc[] / loc[]
         if isinstance(variable, pd.Series) or variable.shape[1] == 1:

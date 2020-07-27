@@ -111,6 +111,28 @@ class TestPartialMoments(unittest.TestCase):
             ret["cov.matrix"], ret_default["cov.matrix"], check_exact=False, check_less_precise=6,
         )
 
+    def test_LPM_ratio(self):
+        x = self.load_default_data()["x"]
+        # TODO: compare with R version
+        self.assertAlmostEqual(Partial_Moments.LPM_ratio(degree=0, target="mean", variable=x), 0.49)
+        self.assertAlmostEqual(
+            Partial_Moments.LPM_ratio(degree=1, target="mean", variable=x), 0.5000000000000002
+        )
+        self.assertAlmostEqual(
+            Partial_Moments.LPM_ratio(degree=2, target="mean", variable=x), 0.4972062015853319
+        )
+
+    def test_UPM_ratio(self):
+        x = self.load_default_data()["x"]
+        # TODO: compare with R version
+        self.assertAlmostEqual(Partial_Moments.UPM_ratio(degree=0, target="mean", variable=x), 0.51)
+        self.assertAlmostEqual(
+            Partial_Moments.UPM_ratio(degree=1, target="mean", variable=x), 0.4999999999999999
+        )
+        self.assertAlmostEqual(
+            Partial_Moments.UPM_ratio(degree=2, target="mean", variable=x), 0.5027937984146681
+        )
+
     def load_default_PM_matrix_ret(self):
         return {
             "cupm": pd.DataFrame(
