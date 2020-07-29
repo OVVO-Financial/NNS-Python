@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
 
@@ -31,8 +32,9 @@ def LPM(degree: [int, float], target: [int, float, str, None], variable: pd.Seri
     if isinstance(target, str):  # "mean"
         target = getattr(variable, target)()
     if degree == 0:
-        return (variable <= target).mean()
-
+        return pd.Series(variable <= target).mean()
+    # TODO: when len(target) > len(variable), R return values ?!?! HOW!?
+    #  should understand how R wokrs with greater than/less than operation and vectors
     return ((target - (variable[variable <= target])) ** degree).sum() / variable.shape[0]
 
 

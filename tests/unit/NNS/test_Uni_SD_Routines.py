@@ -3,192 +3,23 @@ import unittest
 
 import pandas as pd
 
-from NNS import Partial_Moments as Partial_Moments
+from NNS import Uni_SD_Routines as Uni_SD_Routines
 
 
-class TestPartialMoments(unittest.TestCase):
+class TestUni_SD_Routines(unittest.TestCase):
     COMPARISON_PRECISION = 7
 
-    def test_LPM(self):
-        x = self.load_default_data()["x"]
-        self.assertAlmostEqual(Partial_Moments.LPM(0, None, x), 0.49)
-        self.assertAlmostEqual(Partial_Moments.LPM(0, x.mean(), x), 0.49)
-        self.assertAlmostEqual(Partial_Moments.LPM(1, x.mean(), x), 0.1032933)
-        self.assertAlmostEqual(Partial_Moments.LPM(2, x.mean(), x), 0.02993767)
-
-    def test_UPM(self):
-        x = self.load_default_data()["x"]
-        self.assertAlmostEqual(Partial_Moments.UPM(0, None, x), 0.51)
-        self.assertAlmostEqual(Partial_Moments.UPM(0, x.mean(), x), 0.51)
-        self.assertAlmostEqual(Partial_Moments.UPM(1, x.mean(), x), 0.1032933)
-        self.assertAlmostEqual(Partial_Moments.UPM(2, x.mean(), x), 0.03027411)
-
-    def test_Co_UPM(self):
+    def test_NNS_FSD_uni(self):
         z = self.load_default_data()
         x, y = z["x"], z["y"]
+        assert Uni_SD_Routines.NNS_FSD_uni(x, y) == 0
+        assert Uni_SD_Routines.NNS_FSD_uni(x, y.pow(2)) == 1
 
-        self.assertAlmostEqual(Partial_Moments.Co_UPM(0, 0, x, y, None, None), 0.28)
-        self.assertAlmostEqual(Partial_Moments.Co_UPM(0, 0, x, y, x.mean(), y.mean()), 0.28)
-        self.assertAlmostEqual(Partial_Moments.Co_UPM(0, 1, x, y, x.mean(), y.mean()), 0.06314884)
-        self.assertAlmostEqual(Partial_Moments.Co_UPM(1, 0, x, y, x.mean(), y.mean()), 0.05017661)
-        self.assertAlmostEqual(Partial_Moments.Co_UPM(1, 1, x, y, x.mean(), y.mean()), 0.01204606)
-        self.assertAlmostEqual(Partial_Moments.Co_UPM(0, 2, x, y, x.mean(), y.mean()), 0.01741738)
-        self.assertAlmostEqual(Partial_Moments.Co_UPM(2, 0, x, y, x.mean(), y.mean()), 0.01300084)
-        self.assertAlmostEqual(Partial_Moments.Co_UPM(2, 2, x, y, x.mean(), y.mean()), 0.0009799173)
-
-    def test_Co_LPM(self):
-        z = self.load_default_data()
-        x, y = z["x"], z["y"]
-
-        self.assertAlmostEqual(Partial_Moments.Co_LPM(0, 0, x, y, None, None), 0.24)
-        self.assertAlmostEqual(Partial_Moments.Co_LPM(0, 0, x, y, x.mean(), y.mean()), 0.24)
-        self.assertAlmostEqual(Partial_Moments.Co_LPM(0, 1, x, y, x.mean(), y.mean()), 0.0539954)
-        self.assertAlmostEqual(Partial_Moments.Co_LPM(1, 0, x, y, x.mean(), y.mean()), 0.04485831)
-        self.assertAlmostEqual(Partial_Moments.Co_LPM(1, 1, x, y, x.mean(), y.mean()), 0.01058035)
-        self.assertAlmostEqual(Partial_Moments.Co_LPM(0, 2, x, y, x.mean(), y.mean()), 0.01848438)
-        self.assertAlmostEqual(Partial_Moments.Co_LPM(2, 0, x, y, x.mean(), y.mean()), 0.010676)
-        self.assertAlmostEqual(Partial_Moments.Co_LPM(2, 2, x, y, x.mean(), y.mean()), 0.0008940764)
-
-    def test_D_LPM(self):
-        z = self.load_default_data()
-        x, y = z["x"], z["y"]
-
-        self.assertAlmostEqual(Partial_Moments.D_LPM(0, 0, x, y, None, None), 0.23)
-        self.assertAlmostEqual(Partial_Moments.D_LPM(0, 0, x, y, x.mean(), y.mean()), 0.23)
-        self.assertAlmostEqual(Partial_Moments.D_LPM(0, 1, x, y, x.mean(), y.mean()), 0.06404049)
-        self.assertAlmostEqual(Partial_Moments.D_LPM(1, 0, x, y, x.mean(), y.mean()), 0.05311669)
-        self.assertAlmostEqual(Partial_Moments.D_LPM(1, 1, x, y, x.mean(), y.mean()), 0.01513793)
-        self.assertAlmostEqual(Partial_Moments.D_LPM(0, 2, x, y, x.mean(), y.mean()), 0.02248309)
-        self.assertAlmostEqual(Partial_Moments.D_LPM(2, 0, x, y, x.mean(), y.mean()), 0.01727327)
-        self.assertAlmostEqual(Partial_Moments.D_LPM(2, 2, x, y, x.mean(), y.mean()), 0.001554909)
-
-    def test_D_UPM(self):
-        z = self.load_default_data()
-        x, y = z["x"], z["y"]
-
-        self.assertAlmostEqual(Partial_Moments.D_UPM(0, 0, x, y, None, None), 0.25)
-        self.assertAlmostEqual(Partial_Moments.D_UPM(0, 0, x, y, x.mean(), y.mean()), 0.25)
-        self.assertAlmostEqual(Partial_Moments.D_UPM(0, 1, x, y, x.mean(), y.mean()), 0.05488706)
-        self.assertAlmostEqual(Partial_Moments.D_UPM(1, 0, x, y, x.mean(), y.mean()), 0.05843498)
-        self.assertAlmostEqual(Partial_Moments.D_UPM(1, 1, x, y, x.mean(), y.mean()), 0.01199175)
-        self.assertAlmostEqual(Partial_Moments.D_UPM(0, 2, x, y, x.mean(), y.mean()), 0.01512857)
-        self.assertAlmostEqual(Partial_Moments.D_UPM(2, 0, x, y, x.mean(), y.mean()), 0.01926167)
-        self.assertAlmostEqual(Partial_Moments.D_UPM(2, 2, x, y, x.mean(), y.mean()), 0.0009941733)
-
-    def test_PM_matrix(self):
-        z = self.load_default_data()
-        ret = Partial_Moments.PM_matrix(LPM_degree=1, UPM_degree=1, target="mean", variable=z)
-        ret_default = self.load_default_PM_matrix_ret()
-        assert len(ret) == 5
-        assert (
-            "cupm" in ret
-            and "dupm" in ret
-            and "dlpm" in ret
-            and "clpm" in ret
-            and "cov.matrix" in ret
-        )
-        assert len(ret_default) == 5
-        assert (
-            "cupm" in ret_default
-            and "dupm" in ret_default
-            and "dlpm" in ret_default
-            and "clpm" in ret_default
-            and "cov.matrix" in ret_default
-        )
-        pd.testing.assert_frame_equal(
-            ret["cupm"], ret_default["cupm"], check_exact=False, check_less_precise=6,
-        )
-        pd.testing.assert_frame_equal(
-            ret["dupm"], ret_default["dupm"], check_exact=False, check_less_precise=6,
-        )
-        pd.testing.assert_frame_equal(
-            ret["dlpm"], ret_default["dlpm"], check_exact=False, check_less_precise=6,
-        )
-        pd.testing.assert_frame_equal(
-            ret["clpm"], ret_default["clpm"], check_exact=False, check_less_precise=6,
-        )
-        pd.testing.assert_frame_equal(
-            ret["cov.matrix"], ret_default["cov.matrix"], check_exact=False, check_less_precise=6,
-        )
-
-    def test_LPM_ratio(self):
-        x = self.load_default_data()["x"]
-        # TODO: compare with R version
-        self.assertAlmostEqual(Partial_Moments.LPM_ratio(degree=0, target="mean", variable=x), 0.49)
-        self.assertAlmostEqual(
-            Partial_Moments.LPM_ratio(degree=1, target="mean", variable=x), 0.5000000000000002
-        )
-        self.assertAlmostEqual(
-            Partial_Moments.LPM_ratio(degree=2, target="mean", variable=x), 0.4972062015853319
-        )
-
-    def test_UPM_ratio(self):
-        x = self.load_default_data()["x"]
-        # TODO: compare with R version
-        self.assertAlmostEqual(Partial_Moments.UPM_ratio(degree=0, target="mean", variable=x), 0.51)
-        self.assertAlmostEqual(
-            Partial_Moments.UPM_ratio(degree=1, target="mean", variable=x), 0.4999999999999999
-        )
-        self.assertAlmostEqual(
-            Partial_Moments.UPM_ratio(degree=2, target="mean", variable=x), 0.5027937984146681
-        )
-
-    def test_NNS_PDF(self):
-        # TODO: Implement NNS_PDF
+    def test_NNS_SSD_uni(self):
         pass
 
-    def test_NNS_CDF(self):
-        # TODO: Implement NNS_CDF
+    def test_NNS_TSD_uni(self):
         pass
-
-    def load_default_PM_matrix_ret(self):
-        return {
-            "cupm": pd.DataFrame(
-                [
-                    [0.03027411, 0.01204606, 0.01241264],
-                    [0.01204606, 0.03254594, 0.01268401],
-                    [0.01241264, 0.01268401, 0.03535740],
-                ],
-                columns=["x", "y", "z"],
-                index=["x", "y", "z"],
-            ),
-            "dupm": pd.DataFrame(
-                [
-                    [0.00000000, 0.01513793, 0.01041464],
-                    [0.01199175, 0.00000000, 0.01854946],
-                    [0.01178609, 0.01635133, 0.00000000],
-                ],
-                columns=["x", "y", "z"],
-                index=["x", "y", "z"],
-            ),
-            "dlpm": pd.DataFrame(
-                [
-                    [0.00000000, 0.01199175, 0.01178609],
-                    [0.01513793, 0.00000000, 0.01635133],
-                    [0.01041464, 0.01854946, 0.00000000],
-                ],
-                columns=["x", "y", "z"],
-                index=["x", "y", "z"],
-            ),
-            "clpm": pd.DataFrame(
-                [
-                    [0.02993767, 0.01058035, 0.01457109],
-                    [0.01058035, 0.04096747, 0.01190255],
-                    [0.01457109, 0.01190255, 0.04352933],
-                ],
-                columns=["x", "y", "z"],
-                index=["x", "y", "z"],
-            ),
-            "cov.matrix": pd.DataFrame(
-                [
-                    [0.060211776, -0.00450327, 0.004783003],
-                    [-0.004503270, 0.07351342, -0.010314231],
-                    [0.004783003, -0.01031423, 0.078886725],
-                ],
-                columns=["x", "y", "z"],
-                index=["x", "y", "z"],
-            ),
-        }
 
     def load_default_data(self):
         # R Code:
