@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from .Partial_Moments import LPM
 
 # TODO: TEST / implement matplotlib graph
-def NNS_TSD(x: pd.Series, y: pd.Series) -> str:
+def NNS_TSD(x: pd.Series, y: pd.Series, use_plot: bool = True) -> str:
     r"""
     NNS TSD Test
 
@@ -21,41 +22,47 @@ def NNS_TSD(x: pd.Series, y: pd.Series) -> str:
     NNS.TSD(x, y)
     @export
     """
-    x_sort = x.sort_values()
-    y_sort = y.sort_values()
+    x_sort = x.sort_values().values
+    y_sort = y.sort_values().values
 
-    Combined_sort = x_sort.append(y_sort).sort_values()
+    Combined_sort = np.unique(x_sort.append(y_sort).values)
 
     LPM_x_sort = LPM(2, Combined_sort, x)
     LPM_y_sort = LPM(2, Combined_sort, y)
 
-    x_tsd_y = pd.Series(LPM_x_sort > LPM_y_sort).any()
-    y_tsd_x = pd.Series(LPM_y_sort > LPM_x_sort).any()
+    x_tsd_y = np.any(LPM_x_sort > LPM_y_sort)
+    y_tsd_x = np.any(LPM_y_sort > LPM_x_sort)
 
-    # TODO: plot
-    plot(
-        LPM_x_sort,
-        type="l",
-        lwd=3,
-        col="red",
-        main="TSD",
-        ylab="Area of Cumulative Distribution",
-        ylim=c(min(c(LPM_y_sort, LPM_x_sort)), max(c(LPM_y_sort, LPM_x_sort))),
-    )
-    lines(LPM_y_sort, type="l", lwd=3, col="blue")
-    legend("topleft", c("X", "Y"), lwd=10, col=c("red", "blue"))
+    if use_plot:
+        plt.title("TSD")
+        plt.ylabel("Area of Cumulative Distribution")
+        plt.plot(Combined_sort, LPM_x_sort, label="<Combined Sort> vs <LPM X Sort>")
+        plt.plot(Combined_sort, LPM_y_sort, label="<Combined Sort> vs <LPM Y Sort>")
+        plt.legend()
+        ## TODO: plot
+        # plot(
+        #    LPM_x_sort,
+        #    type="l",
+        #    lwd=3,
+        #    col="red",
+        #    main="TSD",
+        #    ylab="Area of Cumulative Distribution",
+        #    ylim=c(min(c(LPM_y_sort, LPM_x_sort)), max(c(LPM_y_sort, LPM_x_sort))),
+        # )
+        # lines(LPM_y_sort, type="l", lwd=3, col="blue")
+        # legend("topleft", c("X", "Y"), lwd=10, col=c("red", "blue"))
     if (
         (not x_tsd_y)
-        and (x.min() >= y.min())
-        and (x.mena() >= y.mean())
-        and (not LPM_x_sort.equals(LPM_y_sort))
+        and (x_sort[0] >= y_sort[0])
+        and (x.mean() >= y.mean())
+        and (not np.equal(LPM_x_sort, LPM_y_sort))
     ):
         return "X TSD Y"
     if (
-        (not y.tsd.x)
-        and (y.min() >= x.min())
+        (not y_tsd_x)
+        and (y_sort[0] >= x_sort[0])
         and (y.mean() >= x.mean())
-        and (not LPM_x_sort.equals(LPM_y_sort))
+        and (not np.equal(LPM_x_sort, LPM_y_sort))
     ):
         return "Y TSD X"
     return "NO TSD EXISTS"

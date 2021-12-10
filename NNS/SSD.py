@@ -22,16 +22,16 @@ def NNS_SSD(x: pd.Series, y: pd.Series, use_plot: bool = True) -> str:
     NNS.SSD(x, y)
     @export
     """
-    x_sort = x.sort_values()
-    y_sort = y.sort_values()
+    x_sort = x.sort_values().values
+    y_sort = y.sort_values().values
 
     Combined_sort = np.unique(x_sort.append(y_sort).values)
 
     LPM_x_sort = LPM(1, Combined_sort, x)
     LPM_y_sort = LPM(1, Combined_sort, y)
 
-    x_ssd_y = pd.Series(LPM_x_sort > LPM_y_sort).any()
-    y_ssd_x = pd.Series(LPM_y_sort > LPM_x_sort).any()
+    x_ssd_y = np.any(LPM_x_sort > LPM_y_sort)
+    y_ssd_x = np.any(LPM_y_sort > LPM_x_sort)
 
     if use_plot:
         plt.title("SSD")
@@ -51,18 +51,19 @@ def NNS_SSD(x: pd.Series, y: pd.Series, use_plot: bool = True) -> str:
         # )
         # lines(Combined_sort, LPM_y_sort, type = "l", lwd = 3,col = "blue")
         # legend("topleft", c("X", "Y"), lwd = 10, col = c("red", "blue"))
+
     if (
         (not x_ssd_y)
-        and (x.min() >= y.min())
+        and (x_sort[0] >= y_sort[0])
         and (x.mean() >= y.mean())
-        and (not LPM_x_sort.equals(LPM_y_sort))
+        and (not np.equal(LPM_x_sort, LPM_y_sort))
     ):
         return "X SSD Y"
     if (
         (not y_ssd_x)
-        and (y.min() >= x.min())
+        and (y_sort[0] >= x_sort[0])
         and (y.mean() >= x.mean())
-        and (not LPM_x_sort.equals(LPM_y_sort))
+        and (not np.equal(LPM_x_sort, LPM_y_sort))
     ):
         return "Y SSD X"
     return "NO SSD EXISTS"
