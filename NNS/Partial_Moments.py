@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
+import numba
 
 
 def pd_fill_diagonal(df_matrix: pd.DataFrame, value) -> None:
@@ -8,7 +9,28 @@ def pd_fill_diagonal(df_matrix: pd.DataFrame, value) -> None:
     df_matrix.values[tuple([np.arange(n)] * 2)] = value
 
 
-def LPM(degree: [int, float], target: [int, float, str, None], variable: pd.Series) -> float:
+@numba.jit(parallel=True, nopython=True)
+def numba_LPM(degree: [int, float], target: np.ndarray, variable: np.ndarray) -> np.ndarray:
+    ret = np.zeros(shape=(target.shape[0]), dtype=np.float32)
+    for i in numba.prange(target.shape[0]):
+        # ugly implementation, but working
+        for ll in range(variable.shape[0]):
+            if variable[ll] <= target[i]:
+                ret[i] += (target[i] - variable[ll]) ** degree
+        ret[i] /= variable.shape[0]
+
+        # TODO:  variable[variable <= target[i]] didn't work at numba
+        # ret[i] += (
+        #    (target[i] - (variable[variable <= target[i]])) ** degree
+        # ).sum() / variable.shape[0]
+    return ret
+
+
+def LPM(
+    degree: [int, float],
+    target: [int, float, str, None, pd.Series, np.ndarray],
+    variable: [pd.Series, np.ndarray],
+) -> [float, np.ndarray]:
     r"""
     Lower Partial Moment
 
@@ -32,13 +54,49 @@ def LPM(degree: [int, float], target: [int, float, str, None], variable: pd.Seri
     if isinstance(target, str):  # "mean"
         target = getattr(variable, target)()
     if degree == 0:
+        if isinstance(target, (np.ndarray, pd.Series, list)):
+            return [pd.Series(variable <= i).mean() for i in target]
         return pd.Series(variable <= target).mean()
-    # TODO: when len(target) > len(variable), R return values ?!?! HOW!?
-    #  should understand how R wokrs with greater than/less than operation and vectors
-    return ((target - (variable[variable <= target])) ** degree).sum() / variable.shape[0]
+    if isinstance(target, (np.ndarray, list)):
+        return numba_LPM(
+            degree=degree,
+            target=target,
+            variable=variable if isinstance(variable, np.ndarray) else variable.values,
+        )
+    elif isinstance(target, pd.Series):
+        return numba_LPM(
+            degree=degree,
+            target=target.values,
+            variable=variable if isinstance(variable, np.ndarray) else variable.values,
+        )
+    return numba_LPM(
+        degree=degree,
+        target=np.array([target]),
+        variable=variable if isinstance(variable, np.ndarray) else variable.values,
+    )[0]
 
 
-def UPM(degree: [int, float], target: [int, float, str, None], variable: pd.Series) -> float:
+@numba.jit(parallel=True, nopython=True)
+def numba_UPM(degree: [int, float], target: np.ndarray, variable: np.ndarray) -> np.ndarray:
+    ret = np.zeros(shape=(target.shape[0]), dtype=np.float32)
+    for i in numba.prange(target.shape[0]):
+        # ugly implementation, but working
+        for ll in range(variable.shape[0]):
+            if variable[ll] > target[i]:
+                ret[i] += (variable[ll] - target[i]) ** degree
+        ret[i] /= variable.shape[0]
+        # TODO:  variable[variable > target[i]] didn't work at numba
+        # ret[i] += (
+        #    ((variable[variable > target[i]]) - target[i]) ** degree
+        # ).sum() / variable.shape[0]
+    return ret
+
+
+def UPM(
+    degree: [int, float],
+    target: [int, float, str, None, pd.Series, np.ndarray],
+    variable: [pd.Series, np.ndarray],
+) -> [float, np.ndarray]:
     r"""
     Upper Partial Moment
 
@@ -56,18 +114,34 @@ def UPM(degree: [int, float], target: [int, float, str, None], variable: pd.Seri
     UPM(0, mean(x), x)
     @export
     """
-
     if target is None:
         target = variable.mean()
     if isinstance(target, str):  # "mean"
         target = getattr(variable, target)()
     if degree == 0:
+        if isinstance(target, (np.ndarray, pd.Series, list)):
+            return [(variable > i).mean() for i in target]
         return (variable > target).mean()
+    if isinstance(target, (np.ndarray, list)):
+        return numba_UPM(
+            degree=degree,
+            target=target,
+            variable=variable if isinstance(variable, np.ndarray) else variable.values,
+        )
+    elif isinstance(target, pd.Series):
+        return numba_UPM(
+            degree=degree,
+            target=target.values,
+            variable=variable if isinstance(variable, np.ndarray) else variable.values,
+        )
+    return numba_UPM(
+        degree=degree,
+        target=np.array([target]),
+        variable=variable if isinstance(variable, np.ndarray) else variable.values,
+    )[0]
 
-    return (((variable[variable > target]) - target) ** degree).sum() / variable.shape[0]
 
-
-def Co_UPM(
+def _Co_UPM(
     degree_x: [float, int],
     degree_y: [float, int],
     x: pd.Series,
@@ -75,27 +149,6 @@ def Co_UPM(
     target_x: [int, float, str, None] = None,
     target_y: [int, float, str, None] = None,
 ) -> float:
-    r"""
-    Co-Upper Partial Moment
-    (Upper Right Quadrant 1)
-
-    This function generates a co-upper partial moment between two equal length variables for any degree or target.
-    @param degree.x integer; Degree for variable X.  \code{(degree.x = 0)} is frequency, \code{(degree.x = 1)} is area.
-    @param degree.y integer; Degree for variable Y.  \code{(degree.y = 0)} is frequency, \code{(degree.y = 1)} is area.
-    @param x a numeric vector.
-    @param y a numeric vector of equal length to \code{x}.
-    @param target.x numeric; Typically the mean of Variable X for classical statistics equivalences, but does not have to be. (Vectorized)
-    @param target.y numeric; Typically the mean of Variable Y for classical statistics equivalences, but does not have to be. (Vectorized)
-    @return Co-UPM of two variables
-    @author Fred Viole, OVVO Financial Systems
-    @references Viole, F. and Nawrocki, D. (2013) "Nonlinear Nonparametric Statistics: Using Partial Moments"
-    \url{https://www.amazon.com/dp/1490523995}
-    @examples
-    set.seed(123)
-    x <- rnorm(100) ; y <- rnorm(100)
-    Co.UPM(0, 0, x, y, mean(x), mean(y))
-    @export
-    """
     if target_x is None:
         target_x = x.mean()
     if target_y is None:
@@ -117,7 +170,55 @@ def Co_UPM(
     return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / x.shape[0]
 
 
-def Co_LPM(
+# Co.UPM <- Vectorize(Co.UPM, vectorize.args = c('target.x', 'target.y'))
+_vec_Co_UPM = np.vectorize(_Co_UPM, excluded=["degree_x", "degree_y", "x", "y"])
+
+
+def Co_UPM(
+    degree_x: [float, int],
+    degree_y: [float, int],
+    x: pd.Series,
+    y: pd.Series,
+    target_x: [int, float, str, None, pd.Series, np.ndarray] = None,
+    target_y: [int, float, str, None, pd.Series, np.ndarray] = None,
+) -> [float, np.ndarray]:
+    r"""
+    Co-Upper Partial Moment
+    (Upper Right Quadrant 1)
+
+    This function generates a co-upper partial moment between two equal length variables for any degree or target.
+    @param degree_x integer; Degree for variable X.  \code{(degree.x = 0)} is frequency, \code{(degree.x = 1)} is area.
+    @param degree_y integer; Degree for variable Y.  \code{(degree.y = 0)} is frequency, \code{(degree.y = 1)} is area.
+    @param x a numeric vector.
+    @param y a numeric vector of equal length to \code{x}.
+    @param target_x numeric; Typically the mean of Variable X for classical statistics equivalences, but does not have to be. (Vectorized)
+    @param target_y numeric; Typically the mean of Variable Y for classical statistics equivalences, but does not have to be. (Vectorized)
+    @return Co-UPM of two variables
+    @author Fred Viole, OVVO Financial Systems
+    @references Viole, F. and Nawrocki, D. (2013) "Nonlinear Nonparametric Statistics: Using Partial Moments"
+    \url{https://www.amazon.com/dp/1490523995}
+    @examples
+    set.seed(123)
+    x <- rnorm(100) ; y <- rnorm(100)
+    Co.UPM(0, 0, x, y, mean(x), mean(y))
+    @export
+    """
+    func = _Co_UPM
+    if isinstance(target_y, (np.ndarray, pd.Series)) or isinstance(
+        target_x, (np.ndarray, pd.Series)
+    ):
+        func = _vec_Co_UPM
+    return func(
+        degree_x=degree_x,
+        degree_y=degree_y,
+        x=x,
+        y=y,
+        target_x=target_x,
+        target_y=target_y,
+    )
+
+
+def _Co_LPM(
     degree_x: [float, int],
     degree_y: [float, int],
     x: pd.Series,
@@ -125,27 +226,6 @@ def Co_LPM(
     target_x: [int, float, str, None] = None,
     target_y: [int, float, str, None] = None,
 ) -> float:
-    r"""
-    Co-Lower Partial Moment
-    (Lower Left Quadrant 4)
-
-    This function generates a co-lower partial moment for between two equal length variables for any degree or target.
-    @param degree.x integer; Degree for variable X.  \code{(degree.x = 0)} is frequency, \code{(degree.x = 1)} is area.
-    @param degree.y integer; Degree for variable Y.  \code{(degree.y = 0)} is frequency, \code{(degree.y = 1)} is area.
-    @param x a numeric vector.
-    @param y a numeric vector of equal length to \code{x}.
-    @param target.x numeric; Typically the mean of Variable X for classical statistics equivalences, but does not have to be. (Vectorized)
-    @param target.y numeric; Typically the mean of Variable Y for classical statistics equivalences, but does not have to be. (Vectorized)
-    @return Co-LPM of two variables
-    @author Fred Viole, OVVO Financial Systems
-    @references Viole, F. and Nawrocki, D. (2013) "Nonlinear Nonparametric Statistics: Using Partial Moments"
-    \url{https://www.amazon.com/dp/1490523995}
-    @examples
-    set.seed(123)
-    x <- rnorm(100) ; y <- rnorm(100)
-    Co.LPM(0, 0, x, y, mean(x), mean(y))
-    @export
-    """
     if target_x is None:
         target_x = x.mean()
     if target_y is None:
@@ -168,7 +248,55 @@ def Co_LPM(
     return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / x.shape[0]
 
 
-def D_LPM(
+# Co.LPM <- Vectorize(Co.LPM, vectorize.args = c('target.x', 'target.y'))
+_vec_Co_LPM = np.vectorize(_Co_LPM, excluded=["degree_x", "degree_y", "x", "y"])
+
+
+def Co_LPM(
+    degree_x: [float, int],
+    degree_y: [float, int],
+    x: pd.Series,
+    y: pd.Series,
+    target_x: [int, float, str, None, np.ndarray, pd.Series] = None,
+    target_y: [int, float, str, None, np.ndarray, pd.Series] = None,
+) -> [float, np.ndarray]:
+    r"""
+    Co-Lower Partial Moment
+    (Lower Left Quadrant 4)
+
+    This function generates a co-lower partial moment for between two equal length variables for any degree or target.
+    @param degree_x integer; Degree for variable X.  \code{(degree.x = 0)} is frequency, \code{(degree.x = 1)} is area.
+    @param degree_y integer; Degree for variable Y.  \code{(degree.y = 0)} is frequency, \code{(degree.y = 1)} is area.
+    @param x a numeric vector.
+    @param y a numeric vector of equal length to \code{x}.
+    @param target_x numeric; Typically the mean of Variable X for classical statistics equivalences, but does not have to be. (Vectorized)
+    @param target_y numeric; Typically the mean of Variable Y for classical statistics equivalences, but does not have to be. (Vectorized)
+    @return Co-LPM of two variables
+    @author Fred Viole, OVVO Financial Systems
+    @references Viole, F. and Nawrocki, D. (2013) "Nonlinear Nonparametric Statistics: Using Partial Moments"
+    \url{https://www.amazon.com/dp/1490523995}
+    @examples
+    set.seed(123)
+    x <- rnorm(100) ; y <- rnorm(100)
+    Co.LPM(0, 0, x, y, mean(x), mean(y))
+    @export
+    """
+    func = _Co_LPM
+    if isinstance(target_y, (np.ndarray, pd.Series)) or isinstance(
+        target_x, (np.ndarray, pd.Series)
+    ):
+        func = _vec_Co_LPM
+    return func(
+        degree_x=degree_x,
+        degree_y=degree_y,
+        x=x,
+        y=y,
+        target_x=target_x,
+        target_y=target_y,
+    )
+
+
+def _D_LPM(
     degree_x: [float, int],
     degree_y: [float, int],
     x: pd.Series,
@@ -176,27 +304,6 @@ def D_LPM(
     target_x: [int, float, str, None] = None,
     target_y: [int, float, str, None] = None,
 ) -> float:
-    r"""
-    Divergent-Lower Partial Moment
-    (Lower Right Quadrant 3)
-
-    This function generates a divergent lower partial moment between two equal length variables for any degree or target.
-    @param degree.x integer; Degree for variable X.  \code{(degree.x = 0)} is frequency, \code{(degree.x = 1)} is area.
-    @param degree.y integer; Degree for variable Y.  \code{(degree.y = 0)} is frequency, \code{(degree.y = 1)} is area.
-    @param x a numeric vector.
-    @param y a numeric vector of equal length to \code{x}.
-    @param target.x numeric; Typically the mean of Variable X for classical statistics equivalences, but does not have to be. (Vectorized)
-    @param target.y numeric; Typically the mean of Variable Y for classical statistics equivalences, but does not have to be. (Vectorized)
-    @return Divergent LPM of two variables
-    @author Fred Viole, OVVO Financial Systems
-    @references Viole, F. and Nawrocki, D. (2013) "Nonlinear Nonparametric Statistics: Using Partial Moments"
-    \url{https://www.amazon.com/dp/1490523995}
-    @examples
-    set.seed(123)
-    x <- rnorm(100) ; y <- rnorm(100)
-    D.LPM(0, 0, x, y, mean(x), mean(y))
-    @export
-    """
     if target_x is None:
         target_x = x.mean()
     if target_y is None:
@@ -219,7 +326,55 @@ def D_LPM(
     return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / x.shape[0]
 
 
-def D_UPM(
+# D.LPM <- Vectorize(D.LPM, vectorize.args = c('target.x', 'target.y'))
+_vec_D_LPM = np.vectorize(_D_LPM, excluded=["degree_x", "degree_y", "x", "y"])
+
+
+def D_LPM(
+    degree_x: [float, int],
+    degree_y: [float, int],
+    x: pd.Series,
+    y: pd.Series,
+    target_x: [int, float, str, None, pd.Series, np.ndarray] = None,
+    target_y: [int, float, str, None, pd.Series, np.ndarray] = None,
+) -> float:
+    r"""
+    Divergent-Lower Partial Moment
+    (Lower Right Quadrant 3)
+
+    This function generates a divergent lower partial moment between two equal length variables for any degree or target.
+    @param degree_x integer; Degree for variable X.  \code{(degree.x = 0)} is frequency, \code{(degree.x = 1)} is area.
+    @param degree_y integer; Degree for variable Y.  \code{(degree.y = 0)} is frequency, \code{(degree.y = 1)} is area.
+    @param x a numeric vector.
+    @param y a numeric vector of equal length to \code{x}.
+    @param target_x numeric; Typically the mean of Variable X for classical statistics equivalences, but does not have to be. (Vectorized)
+    @param target_y numeric; Typically the mean of Variable Y for classical statistics equivalences, but does not have to be. (Vectorized)
+    @return Divergent LPM of two variables
+    @author Fred Viole, OVVO Financial Systems
+    @references Viole, F. and Nawrocki, D. (2013) "Nonlinear Nonparametric Statistics: Using Partial Moments"
+    \url{https://www.amazon.com/dp/1490523995}
+    @examples
+    set.seed(123)
+    x <- rnorm(100) ; y <- rnorm(100)
+    D.LPM(0, 0, x, y, mean(x), mean(y))
+    @export
+    """
+    func = _D_LPM
+    if isinstance(target_y, (np.ndarray, pd.Series)) or isinstance(
+        target_x, (np.ndarray, pd.Series)
+    ):
+        func = _vec_D_LPM
+    return func(
+        degree_x=degree_x,
+        degree_y=degree_y,
+        x=x,
+        y=y,
+        target_x=target_x,
+        target_y=target_y,
+    )
+
+
+def _D_UPM(
     degree_x: [int, float],
     degree_y: [int, float],
     x: pd.Series,
@@ -227,27 +382,6 @@ def D_UPM(
     target_x: [int, float, str, None] = None,
     target_y: [int, float, str, None] = None,
 ) -> float:
-    r"""
-    Divergent-Upper Partial Moment
-    (Upper Left Quadrant 2)
-
-    This function generates a divergent upper partial moment between two equal length variables for any degree or target.
-    @param degree.x integer; Degree for variable X.  \code{(degree.x = 0)} is frequency, \code{(degree.x = 1)} is area.
-    @param degree.y integer; Degree for variable Y.  \code{(degree.y = 0)} is frequency, \code{(degree.y = 1)} is area.
-    @param x a numeric vector.
-    @param y a numeric vector of equal length to \code{x}.
-    @param target.x numeric; Typically the mean of Variable X for classical statistics equivalences, but does not have to be. (Vectorized)
-    @param target.y numeric; Typically the mean of Variable Y for classical statistics equivalences, but does not have to be. (Vectorized)
-    @return Divergent UPM of two variables
-    @author Fred Viole, OVVO Financial Systems
-    @references Viole, F. and Nawrocki, D. (2013) "Nonlinear Nonparametric Statistics: Using Partial Moments"
-    \url{https://www.amazon.com/dp/1490523995}
-    @examples
-    set.seed(123)
-    x <- rnorm(100) ; y <- rnorm(100)
-    D.UPM(0, 0, x, y, mean(x), mean(y))
-    @export
-    """
     if target_x is None:
         target_x = x.mean()
     if target_y is None:
@@ -270,6 +404,54 @@ def D_UPM(
     return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / x.shape[0]
 
 
+# D.UPM <- Vectorize(D.UPM, vectorize.args = c('target.x', 'target.y'))
+_vec_D_UPM = np.vectorize(_D_UPM, excluded=["degree_x", "degree_y", "x", "y"])
+
+
+def D_UPM(
+    degree_x: [int, float],
+    degree_y: [int, float],
+    x: pd.Series,
+    y: pd.Series,
+    target_x: [int, float, str, None, pd.Series, np.ndarray] = None,
+    target_y: [int, float, str, None, pd.Series, np.ndarray] = None,
+) -> float:
+    r"""
+    Divergent-Upper Partial Moment
+    (Upper Left Quadrant 2)
+
+    This function generates a divergent upper partial moment between two equal length variables for any degree or target.
+    @param degree_x integer; Degree for variable X.  \code{(degree.x = 0)} is frequency, \code{(degree.x = 1)} is area.
+    @param degree_y integer; Degree for variable Y.  \code{(degree.y = 0)} is frequency, \code{(degree.y = 1)} is area.
+    @param x a numeric vector.
+    @param y a numeric vector of equal length to \code{x}.
+    @param target_x numeric; Typically the mean of Variable X for classical statistics equivalences, but does not have to be. (Vectorized)
+    @param target_y numeric; Typically the mean of Variable Y for classical statistics equivalences, but does not have to be. (Vectorized)
+    @return Divergent UPM of two variables
+    @author Fred Viole, OVVO Financial Systems
+    @references Viole, F. and Nawrocki, D. (2013) "Nonlinear Nonparametric Statistics: Using Partial Moments"
+    \url{https://www.amazon.com/dp/1490523995}
+    @examples
+    set.seed(123)
+    x <- rnorm(100) ; y <- rnorm(100)
+    D.UPM(0, 0, x, y, mean(x), mean(y))
+    @export
+    """
+    func = _D_UPM
+    if isinstance(target_y, (np.ndarray, pd.Series)) or isinstance(
+        target_x, (np.ndarray, pd.Series)
+    ):
+        func = _vec_D_UPM
+    return func(
+        degree_x=degree_x,
+        degree_y=degree_y,
+        x=x,
+        y=y,
+        target_x=target_x,
+        target_y=target_y,
+    )
+
+
 def PM_matrix(
     LPM_degree: [int, float],
     UPM_degree: [int, float],
@@ -282,11 +464,11 @@ def PM_matrix(
 
 
     This function generates a co-partial moment matrix for the specified co-partial moment.
-    @param LPM.degree integer; Degree for \code{variable} below \code{target} deviations.  \code{(degree = 0)} is frequency, \code{(degree = 1)} is area.
-    @param UPM.degree integer; Degree for \code{variable} above \code{target} deviations.  \code{(degree = 0)} is frequency, \code{(degree = 1)} is area.
+    @param LPM_degree integer; Degree for \code{variable} below \code{target} deviations.  \code{(degree = 0)} is frequency, \code{(degree = 1)} is area.
+    @param UPM_degree integer; Degree for \code{variable} above \code{target} deviations.  \code{(degree = 0)} is frequency, \code{(degree = 1)} is area.
     @param target numeric; Typically the mean of Variable X for classical statistics equivalences, but does not have to be. (Vectorized)  \code{(target = "mean")} (default) will set the target as the mean of every variable.
     @param variable a numeric matrix or data.frame.
-    @param pop.adj logical; \code{FALSE} (default) Adjusts the sample co-partial moment matrices for population statistics.
+    @param pop_adj logical; \code{FALSE} (default) Adjusts the sample co-partial moment matrices for population statistics.
     @return Matrix of partial moment quadrant values (CUPM, DUPM, DLPM, CLPM), and overall covariance matrix.  Uncalled quadrants will return a matrix of zeros.
     @note For divergent asymmetical \code{"D.LPM" and "D.UPM"} matrices, matrix is \code{D.LPM(column,row,...)}.
     @author Fred Viole, OVVO Financial Systems
@@ -813,7 +995,7 @@ def NNS_CDF(
                         variable[:, 1].max(),
                         variable[:, 2].max(),
                         P,
-                        texts=f"P = {round(P,4)}",
+                        texts=f"P = {round(P, 4)}",
                         pos=4,
                         col="red",
                     )

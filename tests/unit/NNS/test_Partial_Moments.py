@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
+import numpy as np
 import pandas as pd
 
 from NNS import Partial_Moments as Partial_Moments
@@ -9,6 +10,16 @@ from NNS import Partial_Moments as Partial_Moments
 class TestPartialMoments(unittest.TestCase):
     COMPARISON_PRECISION = 7
 
+    def assertAlmostEqualArray(
+        self, x: [pd.Series, np.ndarray, list, dict], y: [pd.Series, np.ndarray, list, dict]
+    ) -> None:
+        if isinstance(x, dict):
+            for i in x.keys():
+                self.assertAlmostEqual(x[i], y[i])
+        else:
+            for i in range(len(x)):
+                self.assertAlmostEqual(x[i], y[i])
+
     def test_LPM(self):
         x = self.load_default_data()["x"]
         self.assertAlmostEqual(Partial_Moments.LPM(0, None, x), 0.49)
@@ -16,12 +27,36 @@ class TestPartialMoments(unittest.TestCase):
         self.assertAlmostEqual(Partial_Moments.LPM(1, x.mean(), x), 0.1032933)
         self.assertAlmostEqual(Partial_Moments.LPM(2, x.mean(), x), 0.02993767)
 
+        self.assertAlmostEqualArray(
+            Partial_Moments.LPM(0, x[4:10], x), [0.80, 0.41, 0.98, 0.74, 0.47, 0.35]
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.LPM(1, x[4:10], x),
+            [0.24289462, 0.06719648, 0.47952922, 0.21609444, 0.09339833, 0.05546457],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.LPM(2, x[4:10], x),
+            [0.10301058, 0.01663970, 0.28997176, 0.08712359, 0.02590746, 0.01284660],
+        )
+
     def test_UPM(self):
         x = self.load_default_data()["x"]
         self.assertAlmostEqual(Partial_Moments.UPM(0, None, x), 0.51)
         self.assertAlmostEqual(Partial_Moments.UPM(0, x.mean(), x), 0.51)
         self.assertAlmostEqual(Partial_Moments.UPM(1, x.mean(), x), 0.1032933)
         self.assertAlmostEqual(Partial_Moments.UPM(2, x.mean(), x), 0.03027411)
+
+        self.assertAlmostEqualArray(
+            Partial_Moments.UPM(0, x[4:10], x), [0.20, 0.59, 0.02, 0.26, 0.53, 0.65]
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.UPM(1, x[4:10], x),
+            [0.0248545343, 0.1455188996, 0.0001938987, 0.0326935823, 0.1138953065, 0.1647759354],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.UPM(2, x[4:10], x),
+            [4.742673e-03, 4.970647e-02, 2.359908e-06, 6.724064e-03, 3.472444e-02, 5.931415e-02],
+        )
 
     def test_Co_UPM(self):
         z = self.load_default_data()
@@ -36,6 +71,35 @@ class TestPartialMoments(unittest.TestCase):
         self.assertAlmostEqual(Partial_Moments.Co_UPM(2, 0, x, y, x.mean(), y.mean()), 0.01300084)
         self.assertAlmostEqual(Partial_Moments.Co_UPM(2, 2, x, y, x.mean(), y.mean()), 0.0009799173)
 
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_UPM(0, 0, x, y, x[4:10], y[4:10]),
+            [0.16, 0.18, 0.00, 0.10, 0.29, 0.05],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_UPM(0, 1, x, y, x[4:10], y[4:10]),
+            [0.061739827, 0.022388081, 0.000000000, 0.012079921, 0.046203058, 0.003264875],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_UPM(1, 0, x, y, x[4:10], y[4:10]),
+            [0.02350672, 0.04529021, 0.00000000, 0.01175768, 0.05593678, 0.01283602],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_UPM(1, 1, x, y, x[4:10], y[4:10]),
+            [0.0077066976, 0.0053850329, 0.0000000000, 0.0016943266, 0.0098111799, 0.0009596762],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_UPM(0, 2, x, y, x[4:10], y[4:10]),
+            [0.0343573169, 0.0036537229, 0.0000000000, 0.0021943104, 0.0106127604, 0.0002280662],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_UPM(2, 0, x, y, x[4:10], y[4:10]),
+            [0.004591201, 0.015727129, 0.000000000, 0.002217705, 0.015175454, 0.004628285],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_UPM(2, 2, x, y, x[4:10], y[4:10]),
+            [7.393054e-04, 3.113780e-04, 0.000000e00, 7.092159e-05, 7.024123e-04, 3.236049e-05],
+        )
+
     def test_Co_LPM(self):
         z = self.load_default_data()
         x, y = z["x"], z["y"]
@@ -48,6 +112,39 @@ class TestPartialMoments(unittest.TestCase):
         self.assertAlmostEqual(Partial_Moments.Co_LPM(0, 2, x, y, x.mean(), y.mean()), 0.01848438)
         self.assertAlmostEqual(Partial_Moments.Co_LPM(2, 0, x, y, x.mean(), y.mean()), 0.010676)
         self.assertAlmostEqual(Partial_Moments.Co_LPM(2, 2, x, y, x.mean(), y.mean()), 0.0008940764)
+
+        # NNS::Co.LPM(0, 0, x, y, x[5:10], y[5:10])
+        # is equal to
+        # Partial_Moments.Co_LPM(0, 0, x, y, x[4:10], y[4:10])
+        # cause R use a different slice method
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_LPM(0, 0, x, y, x[4:10], y[4:10]),
+            [0.08, 0.27, 0.23, 0.48, 0.26, 0.33],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_LPM(0, 1, x, y, x[4:10], y[4:10]),
+            [0.007927292, 0.095962199, 0.033041430, 0.136350213, 0.068840778, 0.124456005],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_LPM(1, 0, x, y, x[4:10], y[4:10]),
+            [0.02806505, 0.04580165, 0.09941373, 0.14270236, 0.05234510, 0.05274968],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_LPM(1, 1, x, y, x[4:10], y[4:10]),
+            [0.002703598, 0.013426491, 0.015289822, 0.039692579, 0.012319601, 0.017200653],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_LPM(0, 2, x, y, x[4:10], y[4:10]),
+            [0.001028405, 0.044427617, 0.006357793, 0.057760425, 0.026193545, 0.068839353],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_LPM(2, 0, x, y, x[4:10], y[4:10]),
+            [0.01192015, 0.01147958, 0.05527885, 0.05837932, 0.01401319, 0.01210954],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.Co_LPM(2, 2, x, y, x[4:10], y[4:10]),
+            [0.0001439027, 0.0010814400, 0.0017942588, 0.0063185186, 0.0010455681, 0.0016179699],
+        )
 
     def test_D_LPM(self):
         z = self.load_default_data()
@@ -62,6 +159,35 @@ class TestPartialMoments(unittest.TestCase):
         self.assertAlmostEqual(Partial_Moments.D_LPM(2, 0, x, y, x.mean(), y.mean()), 0.01727327)
         self.assertAlmostEqual(Partial_Moments.D_LPM(2, 2, x, y, x.mean(), y.mean()), 0.001554909)
 
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_LPM(0, 0, x, y, x[4:10], y[4:10]),
+            [0.04, 0.41, 0.02, 0.16, 0.24, 0.60],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_LPM(0, 1, x, y, x[4:10], y[4:10]),
+            [0.0033924100, 0.1228448321, 0.0005880316, 0.0585458775, 0.0795664636, 0.2168141323],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_LPM(1, 0, x, y, x[4:10], y[4:10]),
+            [0.0013478162, 0.1002286860, 0.0001938987, 0.0209359065, 0.0579585233, 0.1519399110],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_LPM(1, 1, x, y, x[4:10], y[4:10]),
+            [7.057350e-05, 3.485177e-02, 6.464252e-06, 8.244865e-03, 2.011508e-02, 5.933306e-02],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_LPM(0, 2, x, y, x[4:10], y[4:10]),
+            [3.227829e-04, 5.633341e-02, 1.850276e-05, 2.809803e-02, 3.158834e-02, 1.181465e-01],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_LPM(2, 0, x, y, x[4:10], y[4:10]),
+            [1.514718e-04, 3.397934e-02, 2.359908e-06, 4.506360e-03, 1.954899e-02, 5.468587e-02],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_LPM(2, 2, x, y, x[4:10], y[4:10]),
+            [3.570080e-07, 6.165550e-03, 3.053570e-09, 7.683406e-04, 2.542728e-03, 1.305897e-02],
+        )
+
     def test_D_UPM(self):
         z = self.load_default_data()
         x, y = z["x"], z["y"]
@@ -74,6 +200,35 @@ class TestPartialMoments(unittest.TestCase):
         self.assertAlmostEqual(Partial_Moments.D_UPM(0, 2, x, y, x.mean(), y.mean()), 0.01512857)
         self.assertAlmostEqual(Partial_Moments.D_UPM(2, 0, x, y, x.mean(), y.mean()), 0.01926167)
         self.assertAlmostEqual(Partial_Moments.D_UPM(2, 2, x, y, x.mean(), y.mean()), 0.0009941733)
+
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_UPM(0, 0, x, y, x[4:10], y[4:10]),
+            [0.71, 0.13, 0.74, 0.25, 0.20, 0.01],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_UPM(0, 1, x, y, x[4:10], y[4:10]),
+            [0.3093049217, 0.0149820452, 0.2746970726, 0.0374187512, 0.0390594354, 0.0007309771],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_UPM(1, 0, x, y, x[4:10], y[4:10]),
+            [0.214829569, 0.021394831, 0.380115487, 0.073392080, 0.041053231, 0.002714889],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_UPM(1, 1, x, y, x[4:10], y[4:10]),
+            [0.0932774739, 0.0026736004, 0.1353388473, 0.0109792990, 0.0078132486, 0.0001984521],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_UPM(0, 2, x, y, x[4:10], y[4:10]),
+            [1.672070e-01, 2.018018e-03, 1.252507e-01, 6.601065e-03, 9.106034e-03, 5.343275e-05],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_UPM(2, 0, x, y, x[4:10], y[4:10]),
+            [0.091090436, 0.005160124, 0.234692911, 0.028744270, 0.011894273, 0.000737062],
+        )
+        self.assertAlmostEqualArray(
+            Partial_Moments.D_UPM(2, 2, x, y, x[4:10], y[4:10]),
+            [2.150991e-02, 1.045718e-04, 3.685723e-02, 7.789023e-04, 5.293443e-04, 3.938325e-06],
+        )
 
     def test_PM_matrix(self):
         z = self.load_default_data()
@@ -96,35 +251,48 @@ class TestPartialMoments(unittest.TestCase):
             and "cov.matrix" in ret_default
         )
         pd.testing.assert_frame_equal(
-            ret["cupm"], ret_default["cupm"], check_exact=False, check_less_precise=6,
+            ret["cupm"],
+            ret_default["cupm"],
+            check_exact=False,
+            check_less_precise=6,
         )
         pd.testing.assert_frame_equal(
-            ret["dupm"], ret_default["dupm"], check_exact=False, check_less_precise=6,
+            ret["dupm"],
+            ret_default["dupm"],
+            check_exact=False,
+            check_less_precise=6,
         )
         pd.testing.assert_frame_equal(
-            ret["dlpm"], ret_default["dlpm"], check_exact=False, check_less_precise=6,
+            ret["dlpm"],
+            ret_default["dlpm"],
+            check_exact=False,
+            check_less_precise=6,
         )
         pd.testing.assert_frame_equal(
-            ret["clpm"], ret_default["clpm"], check_exact=False, check_less_precise=6,
+            ret["clpm"],
+            ret_default["clpm"],
+            check_exact=False,
+            check_less_precise=6,
         )
         pd.testing.assert_frame_equal(
-            ret["cov.matrix"], ret_default["cov.matrix"], check_exact=False, check_less_precise=6,
+            ret["cov.matrix"],
+            ret_default["cov.matrix"],
+            check_exact=False,
+            check_less_precise=6,
         )
 
     def test_LPM_ratio(self):
         x = self.load_default_data()["x"]
-        # TODO: compare with R version
         self.assertAlmostEqual(Partial_Moments.LPM_ratio(degree=0, target="mean", variable=x), 0.49)
         self.assertAlmostEqual(
             Partial_Moments.LPM_ratio(degree=1, target="mean", variable=x), 0.5000000000000002
         )
         self.assertAlmostEqual(
-            Partial_Moments.LPM_ratio(degree=2, target="mean", variable=x), 0.4972062015853319
+            Partial_Moments.LPM_ratio(degree=2, target="mean", variable=x), 0.49720627
         )
 
     def test_UPM_ratio(self):
         x = self.load_default_data()["x"]
-        # TODO: compare with R version
         self.assertAlmostEqual(Partial_Moments.UPM_ratio(degree=0, target="mean", variable=x), 0.51)
         self.assertAlmostEqual(
             Partial_Moments.UPM_ratio(degree=1, target="mean", variable=x), 0.4999999999999999
@@ -134,12 +302,10 @@ class TestPartialMoments(unittest.TestCase):
         )
 
     def test_NNS_PDF(self):
-        # TODO: Implement NNS_PDF
-        pass
+        print("TODO: Implement NNS_PDF")  # TODO
 
     def test_NNS_CDF(self):
-        # TODO: Implement NNS_CDF
-        pass
+        print("TODO: Implement NNS_CDF")  # TODO
 
     def load_default_PM_matrix_ret(self):
         return {

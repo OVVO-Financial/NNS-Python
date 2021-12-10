@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
+import numpy as np
 from .Partial_Moments import LPM, UPM
 
 
@@ -11,7 +12,7 @@ def NNS_FSD_uni(x: pd.Series, y: pd.set_option, type_test: str = "discrete") -> 
 
     @param x a numeric vector.
     @param y a numeric vector.
-    @param type options: ("discrete", "continuous"); \code{"discrete"} (default) selects the type of CDF.
+    @param type_test: ("discrete", "continuous"); \code{"discrete"} (default) selects the type of CDF.
     @return Returns (1) if \code{"X FSD Y"}, else (0).
     @author Fred Viole, OVVO Financial Systems
     @references Viole, F. and Nawrocki, D. (2016) "LPM Density Functions for the Computation of the SD Efficient Set." Journal of Mathematical Finance, 6, 105-126. \url{http://www.scirp.org/Journal/PaperInformation.aspx?PaperID=63817}.
@@ -31,10 +32,10 @@ def NNS_FSD_uni(x: pd.Series, y: pd.set_option, type_test: str = "discrete") -> 
     if y.min() > x.min():
         return 0
 
-    x_sort = x.sort_values()  # TODO: , decreasing = FALSE)
-    y_sort = y.sort_values()
+    x_sort = x.sort_values(ascending=True)  # TODO: , decreasing = FALSE)
+    y_sort = y.sort_values(ascending=True)
 
-    Combined_sort = x_sort.append(y_sort).sort_values()  # TODO:, decreasing = FALSE)
+    Combined_sort = x_sort.append(y_sort).sort_values(ascending=True)  # TODO:, decreasing = FALSE)
 
     if type == "discrete":
         degree = 0
@@ -56,13 +57,13 @@ def NNS_FSD_uni(x: pd.Series, y: pd.set_option, type_test: str = "discrete") -> 
 def NNS_SSD_uni(x: pd.Series, y: pd.Series) -> int:
     r"""
     NNS SSD Test uni-directional
-    
+
     Uni-directional test of second degree stochastic dominance using lower partial moments used in SD Efficient Set routine.
     @param x a numeric vector.
     @param y a numeric vector.
     @return Returns (1) if \code{"X SSD Y"}, else (0).
     @author Fred Viole, OVVO Financial Systems
-    @references Viole, F. and Nawrocki, D. (2016) "LPM Density Functions for the Computation of the SD Efficient Set." 
+    @references Viole, F. and Nawrocki, D. (2016) "LPM Density Functions for the Computation of the SD Efficient Set."
         Journal of Mathematical Finance, 6, 105-126. \url{http://www.scirp.org/Journal/PaperInformation.aspx?PaperID=63817}.
     @examples
     set.seed(123)
@@ -75,7 +76,7 @@ def NNS_SSD_uni(x: pd.Series, y: pd.Series) -> int:
     x_sort = x.sort_values()  # TODO:, decreasing = FALSE)
     y_sort = y.sort_values()  # TODO:, decreasing = FALSE)
 
-    Combined_sort = x_sort.append(y_sort).sort_values()
+    Combined_sort = np.unique(x_sort.append(y_sort).values)
 
     LPM_x_sort = LPM(1, Combined_sort, x)
     LPM_y_sort = LPM(1, Combined_sort, y)
@@ -106,10 +107,10 @@ def NNS_TSD_uni(x: pd.Series, y: pd.Series) -> int:
     """
     if y.min() > x.min() or y.mean() > x.mean():
         return 0
-    x_sort = x.sort_values()  # TODO:, decreasing = FALSE)
-    y_sort = y.sort_values()  # TODO:, decreasing = FALSE)
+    x_sort = x.sort_values(ascending=True)  # TODO:, decreasing = FALSE)
+    y_sort = y.sort_values(ascending=True)  # TODO:, decreasing = FALSE)
 
-    Combined_sort = x_sort.append(y_sort).sort_values()  # TODO:, decreasing = FALSE)
+    Combined_sort = np.unique(x_sort.append(y_sort).values)  # TODO:, decreasing = FALSE)
 
     LPM_x_sort = LPM(2, Combined_sort, x)
     LPM_y_sort = LPM(2, Combined_sort, y)
