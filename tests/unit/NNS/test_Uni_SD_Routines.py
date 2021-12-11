@@ -12,14 +12,22 @@ class TestUni_SD_Routines(unittest.TestCase):
     def test_NNS_FSD_uni(self):
         z = self.load_default_data()
         x, y = z["x"], z["y"]
-        assert Uni_SD_Routines.NNS_FSD_uni(x, y) == 0
-        assert Uni_SD_Routines.NNS_FSD_uni(x, y.pow(2)) == 1
+        assert Uni_SD_Routines.NNS_FSD_uni(x, y, "discrete") == 0
+        assert Uni_SD_Routines.NNS_FSD_uni(x, y, "continuous") == 0
+        assert Uni_SD_Routines.NNS_FSD_uni(x, y.pow(2), "discrete") == 1
+        assert Uni_SD_Routines.NNS_FSD_uni(x, y.pow(2), "continuous") == 1
 
     def test_NNS_SSD_uni(self):
-        pass
+        z = self.load_default_data()
+        x, y = z["x"], z["y"]
+        assert Uni_SD_Routines.NNS_SSD_uni(x, y) == 0
+        assert Uni_SD_Routines.NNS_SSD_uni(x, y.pow(2)) == 1
 
     def test_NNS_TSD_uni(self):
-        pass
+        z = self.load_default_data()
+        x, y = z["x"], z["y"]
+        assert Uni_SD_Routines.NNS_TSD_uni(x, y) == 0
+        assert Uni_SD_Routines.NNS_TSD_uni(x, y.pow(2)) == 1
 
     def load_default_data(self):
         # R Code:

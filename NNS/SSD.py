@@ -56,14 +56,14 @@ def NNS_SSD(x: pd.Series, y: pd.Series, use_plot: bool = True) -> str:
         (not x_ssd_y)
         and (x_sort[0] >= y_sort[0])
         and (x.mean() >= y.mean())
-        and (not np.equal(LPM_x_sort, LPM_y_sort))
+        and (not np.equal(LPM_x_sort, LPM_y_sort).all())
     ):
         return "X SSD Y"
     if (
         (not y_ssd_x)
         and (y_sort[0] >= x_sort[0])
         and (y.mean() >= x.mean())
-        and (not np.equal(LPM_x_sort, LPM_y_sort))
+        and (not np.equal(LPM_x_sort, LPM_y_sort).all())
     ):
         return "Y SSD X"
     return "NO SSD EXISTS"

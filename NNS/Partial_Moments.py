@@ -55,8 +55,8 @@ def LPM(
         target = getattr(variable, target)()
     if degree == 0:
         if isinstance(target, (np.ndarray, pd.Series, list)):
-            return [pd.Series(variable <= i).mean() for i in target]
-        return pd.Series(variable <= target).mean()
+            return np.array([np.mean(variable <= i) for i in target])
+        return np.mean(variable <= target)
     if isinstance(target, (np.ndarray, list)):
         return numba_LPM(
             degree=degree,
@@ -120,8 +120,8 @@ def UPM(
         target = getattr(variable, target)()
     if degree == 0:
         if isinstance(target, (np.ndarray, pd.Series, list)):
-            return [(variable > i).mean() for i in target]
-        return (variable > target).mean()
+            return np.array([np.mean(variable > i) for i in target])
+        return np.mean(variable > target)
     if isinstance(target, (np.ndarray, list)):
         return numba_UPM(
             degree=degree,

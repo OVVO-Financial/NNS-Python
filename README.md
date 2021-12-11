@@ -69,7 +69,7 @@ Implemented Functions:
     * NNS_TSD: TODO (matplotlib, numpy friendly)
 
 * Uni SD Routines
-    * NNS_FSD_uni: Must Test (TODO: numpy friendly)
-    * NNS_SSD_uni: Must Test (TODO: numpy friendly)
-    * NNS_TSD_uni: Must Test (TODO: numpy friendly)
+    * NNS_FSD_uni: OK
+    * NNS_SSD_uni: OK
+    * NNS_TSD_uni: OK
     

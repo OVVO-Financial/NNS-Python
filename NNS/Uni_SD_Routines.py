@@ -4,7 +4,9 @@ import numpy as np
 from .Partial_Moments import LPM, UPM
 
 
-def NNS_FSD_uni(x: pd.Series, y: pd.set_option, type_test: str = "discrete") -> int:
+def NNS_FSD_uni(
+    x: [pd.Series, np.ndarray], y: [pd.Series, np.ndarray], type_test: str = "discrete"
+) -> int:
     r"""
     NNS FSD Test uni-directional
 
@@ -29,32 +31,26 @@ def NNS_FSD_uni(x: pd.Series, y: pd.set_option, type_test: str = "discrete") -> 
     if type_test not in ["discrete", "continuous"]:
         raise ValueError("type needs to be either discrete or continuous")
 
-    if y.min() > x.min():
+    if np.min(y) > np.min(x):
         return 0
 
-    x_sort = x.sort_values(ascending=True)  # TODO: , decreasing = FALSE)
-    y_sort = y.sort_values(ascending=True)
+    x_sort = np.sort(x)
+    y_sort = np.sort(y)
 
-    Combined_sort = x_sort.append(y_sort).sort_values(ascending=True)  # TODO:, decreasing = FALSE)
-
-    if type == "discrete":
-        degree = 0
-    else:
-        degree = 1
-
+    Combined_sort = np.unique(np.append(x_sort, y_sort))
+    degree = 0 if type_test == "discrete" else 1
     L_x = LPM(degree, Combined_sort, x)
     LPM_x_sort = L_x / (UPM(degree, Combined_sort, x) + L_x)
     L_y = LPM(degree, Combined_sort, y)
     LPM_y_sort = L_y / (UPM(degree, Combined_sort, y) + L_y)
+    x_fsd_y = np.any(LPM_x_sort > LPM_y_sort)
 
-    x_fsd_y = pd.Series(LPM_x_sort > LPM_y_sort).any()
-
-    if (not x_fsd_y) and (x.min() >= y.min()) and (not pd.Series(LPM_x_sort).equals(LPM_y_sort)):
+    if (not x_fsd_y) and (x_sort[0] >= y_sort[0]) and (not np.equal(LPM_x_sort, LPM_y_sort).all()):
         return 1
     return 0
 
 
-def NNS_SSD_uni(x: pd.Series, y: pd.Series) -> int:
+def NNS_SSD_uni(x: [pd.Series, np.ndarray], y: [pd.Series, np.ndarray]) -> int:
     r"""
     NNS SSD Test uni-directional
 
@@ -71,24 +67,20 @@ def NNS_SSD_uni(x: pd.Series, y: pd.Series) -> int:
     NNS.SSD.uni(x, y)
     @export
     """
-    if y.min() > x.min() or y.mean() > x.mean():
+    if np.min(y) > np.min(x) or np.mean(y) > np.mean(x):
         return 0
-    x_sort = x.sort_values()  # TODO:, decreasing = FALSE)
-    y_sort = y.sort_values()  # TODO:, decreasing = FALSE)
-
-    Combined_sort = np.unique(x_sort.append(y_sort).values)
-
+    x_sort = np.sort(x)
+    y_sort = np.sort(y)
+    Combined_sort = np.unique(np.append(x_sort, y_sort))
     LPM_x_sort = LPM(1, Combined_sort, x)
     LPM_y_sort = LPM(1, Combined_sort, y)
-
-    x_ssd_y = pd.Series(LPM_x_sort > LPM_y_sort).any()
-
-    if (not x_ssd_y) and (x.min() >= y.min()) and (not pd.Series(LPM_x_sort).equals(LPM_y_sort)):
+    x_ssd_y = np.any(LPM_x_sort > LPM_y_sort)
+    if (not x_ssd_y) and (x_sort[0] >= y_sort[0]) and (not np.equal(LPM_x_sort, LPM_y_sort).all()):
         return 1
     return 0
 
 
-def NNS_TSD_uni(x: pd.Series, y: pd.Series) -> int:
+def NNS_TSD_uni(x: [pd.Series, np.ndarray], y: [pd.Series, np.ndarray]) -> int:
     r"""
     NNS TSD Test uni-directional
 
@@ -105,18 +97,15 @@ def NNS_TSD_uni(x: pd.Series, y: pd.Series) -> int:
     NNS.TSD.uni(x, y)
     @export
     """
-    if y.min() > x.min() or y.mean() > x.mean():
+    if np.min(y) > np.min(x) or np.mean(y) > np.mean(x):
         return 0
-    x_sort = x.sort_values(ascending=True)  # TODO:, decreasing = FALSE)
-    y_sort = y.sort_values(ascending=True)  # TODO:, decreasing = FALSE)
-
-    Combined_sort = np.unique(x_sort.append(y_sort).values)  # TODO:, decreasing = FALSE)
-
+    x_sort = np.sort(x)
+    y_sort = np.sort(y)
+    Combined_sort = np.unique(np.append(x_sort, y_sort))
     LPM_x_sort = LPM(2, Combined_sort, x)
     LPM_y_sort = LPM(2, Combined_sort, y)
+    x_tsd_y = np.any(LPM_x_sort > LPM_y_sort)
 
-    x_tsd_y = pd.Series(LPM_x_sort > LPM_y_sort).any()
-
-    if (not x_tsd_y) and (x.min() >= y.min()) and (not pd.Series(LPM_x_sort).equals(LPM_y_sort)):
+    if (not x_tsd_y) and (x_sort[0] >= y_sort[0]) and (not np.equal(LPM_x_sort, LPM_y_sort).all()):
         return 1
     return 0
