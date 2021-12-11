@@ -1,33 +1,108 @@
 # -*- coding: utf-8 -*-
 import unittest
-
 import pandas as pd
+import matplotlib.pyplot as plt
+from NNS.FSD import NNS_FSD
+from NNS.SSD import NNS_SSD
+from NNS.TSD import NNS_TSD
 
-from NNS import Uni_SD_Routines as Uni_SD_Routines
 
-
-class TestUni_SD_Routines(unittest.TestCase):
+class TestFSD_SSD_TSD(unittest.TestCase):
     COMPARISON_PRECISION = 7
 
-    def test_NNS_FSD_uni(self):
+    def test_FSD(self):
         z = self.load_default_data()
         x, y = z["x"], z["y"]
-        assert Uni_SD_Routines.NNS_FSD_uni(x, y, "discrete") == 0
-        assert Uni_SD_Routines.NNS_FSD_uni(x, y, "continuous") == 0
-        assert Uni_SD_Routines.NNS_FSD_uni(x, y.pow(2), "discrete") == 1
-        assert Uni_SD_Routines.NNS_FSD_uni(x, y.pow(2), "continuous") == 1
+        # pandas
+        self.assertEqual(NNS_FSD(x, y, type_cdf="discrete", use_plot=True), "NO FSD EXISTS")
+        self.assertEqual(NNS_FSD(x, y, type_cdf="continuous", use_plot=True), "NO FSD EXISTS")
+        self.assertEqual(NNS_FSD(x, y, type_cdf="discrete", use_plot=False), "NO FSD EXISTS")
+        self.assertEqual(NNS_FSD(x, y, type_cdf="continuous", use_plot=False), "NO FSD EXISTS")
 
-    def test_NNS_SSD_uni(self):
-        z = self.load_default_data()
-        x, y = z["x"], z["y"]
-        assert Uni_SD_Routines.NNS_SSD_uni(x, y) == 0
-        assert Uni_SD_Routines.NNS_SSD_uni(x, y.pow(2)) == 1
+        self.assertEqual(NNS_FSD(x, y ** 2, type_cdf="discrete", use_plot=True), "X FSD Y")
+        self.assertEqual(NNS_FSD(x, y ** 2, type_cdf="continuous", use_plot=True), "X FSD Y")
+        self.assertEqual(NNS_FSD(x, y ** 2, type_cdf="discrete", use_plot=False), "X FSD Y")
+        self.assertEqual(NNS_FSD(x, y ** 2, type_cdf="continuous", use_plot=False), "X FSD Y")
 
-    def test_NNS_TSD_uni(self):
+        self.assertEqual(NNS_FSD(y ** 2, x, type_cdf="discrete", use_plot=True), "Y FSD X")
+        self.assertEqual(NNS_FSD(y ** 2, x, type_cdf="continuous", use_plot=True), "Y FSD X")
+        self.assertEqual(NNS_FSD(y ** 2, x, type_cdf="discrete", use_plot=False), "Y FSD X")
+        self.assertEqual(NNS_FSD(y ** 2, x, type_cdf="continuous", use_plot=False), "Y FSD X")
+        # numpy
+        self.assertEqual(
+            NNS_FSD(x.values, y.values, type_cdf="discrete", use_plot=True), "NO FSD EXISTS"
+        )
+        self.assertEqual(
+            NNS_FSD(x.values, y.values, type_cdf="continuous", use_plot=True), "NO FSD EXISTS"
+        )
+        self.assertEqual(
+            NNS_FSD(x.values, y.values, type_cdf="discrete", use_plot=False), "NO FSD EXISTS"
+        )
+        self.assertEqual(
+            NNS_FSD(x.values, y.values, type_cdf="continuous", use_plot=False), "NO FSD EXISTS"
+        )
+
+        self.assertEqual(
+            NNS_FSD(x.values, y.values ** 2, type_cdf="discrete", use_plot=True), "X FSD Y"
+        )
+        self.assertEqual(
+            NNS_FSD(x.values, y.values ** 2, type_cdf="continuous", use_plot=True), "X FSD Y"
+        )
+        self.assertEqual(
+            NNS_FSD(x.values, y.values ** 2, type_cdf="discrete", use_plot=False), "X FSD Y"
+        )
+        self.assertEqual(
+            NNS_FSD(x.values, y.values ** 2, type_cdf="continuous", use_plot=False), "X FSD Y"
+        )
+
+        self.assertEqual(
+            NNS_FSD(y.values ** 2, x.values, type_cdf="discrete", use_plot=True), "Y FSD X"
+        )
+        self.assertEqual(
+            NNS_FSD(y.values ** 2, x.values, type_cdf="continuous", use_plot=True), "Y FSD X"
+        )
+        self.assertEqual(
+            NNS_FSD(y.values ** 2, x.values, type_cdf="discrete", use_plot=False), "Y FSD X"
+        )
+        self.assertEqual(
+            NNS_FSD(y.values ** 2, x.values, type_cdf="continuous", use_plot=False), "Y FSD X"
+        )
+
+    def test_SSD(self):
         z = self.load_default_data()
         x, y = z["x"], z["y"]
-        assert Uni_SD_Routines.NNS_TSD_uni(x, y) == 0
-        assert Uni_SD_Routines.NNS_TSD_uni(x, y.pow(2)) == 1
+        # pandas
+        self.assertEqual(NNS_SSD(x, y, use_plot=True), "NO SSD EXISTS")
+        self.assertEqual(NNS_SSD(x, y, use_plot=False), "NO SSD EXISTS")
+        self.assertEqual(NNS_SSD(x, y ** 2, use_plot=True), "X SSD Y")
+        self.assertEqual(NNS_SSD(x, y ** 2, use_plot=False), "X SSD Y")
+        self.assertEqual(NNS_SSD(y ** 2, x, use_plot=True), "Y SSD X")
+        self.assertEqual(NNS_SSD(y ** 2, x, use_plot=False), "Y SSD X")
+        # numpy
+        self.assertEqual(NNS_SSD(x.values, y.values, use_plot=True), "NO SSD EXISTS")
+        self.assertEqual(NNS_SSD(x.values, y.values, use_plot=False), "NO SSD EXISTS")
+        self.assertEqual(NNS_SSD(x.values, y.values ** 2, use_plot=True), "X SSD Y")
+        self.assertEqual(NNS_SSD(x.values, y.values ** 2, use_plot=False), "X SSD Y")
+        self.assertEqual(NNS_SSD(y.values ** 2, x.values, use_plot=True), "Y SSD X")
+        self.assertEqual(NNS_SSD(y.values ** 2, x.values, use_plot=False), "Y SSD X")
+
+    def test_TSD(self):
+        z = self.load_default_data()
+        x, y = z["x"], z["y"]
+        # pandas
+        self.assertEqual(NNS_TSD(x, y, use_plot=True), "NO TSD EXISTS")
+        self.assertEqual(NNS_TSD(x, y, use_plot=False), "NO TSD EXISTS")
+        self.assertEqual(NNS_TSD(x, y ** 2, use_plot=True), "X TSD Y")
+        self.assertEqual(NNS_TSD(x, y ** 2, use_plot=False), "X TSD Y")
+        self.assertEqual(NNS_TSD(y ** 2, x, use_plot=True), "Y TSD X")
+        self.assertEqual(NNS_TSD(y ** 2, x, use_plot=False), "Y TSD X")
+        # numpy
+        self.assertEqual(NNS_TSD(x.values, y.values, use_plot=True), "NO TSD EXISTS")
+        self.assertEqual(NNS_TSD(x.values, y.values, use_plot=False), "NO TSD EXISTS")
+        self.assertEqual(NNS_TSD(x.values, y.values ** 2, use_plot=True), "X TSD Y")
+        self.assertEqual(NNS_TSD(x.values, y.values ** 2, use_plot=False), "X TSD Y")
+        self.assertEqual(NNS_TSD(y.values ** 2, x.values, use_plot=True), "Y TSD X")
+        self.assertEqual(NNS_TSD(y.values ** 2, x.values, use_plot=False), "Y TSD X")
 
     def load_default_data(self):
         # R Code:
