@@ -8,9 +8,6 @@ Implemented Functions:
 * dy_dx
     * dy_dx: TODO
     
-* FSD
-    * NNS_FSD: TODO
-    
 * Internal Functions
     * mode: Must TEST
     * mode_class: TODO
@@ -62,14 +59,12 @@ Implemented Functions:
 * SD Efficient Set
     * NNS_SD_efficient_set: TODO
     
-* SSD
-    * NNS_SSD: TODO (matplotlib, numpy friendly)
-    
-* TSD
-    * NNS_TSD: TODO (matplotlib, numpy friendly)
+* FSD, SSD, TSD
+    * NNS_FSD: OK
+    * NNS_SSD: OK
+    * NNS_TSD: OK
 
 * Uni SD Routines
     * NNS_FSD_uni: OK
     * NNS_SSD_uni: OK
     * NNS_TSD_uni: OK
-    

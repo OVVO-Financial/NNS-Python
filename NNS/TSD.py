@@ -22,17 +22,13 @@ def NNS_TSD(x: pd.Series, y: pd.Series, use_plot: bool = True) -> str:
     NNS.TSD(x, y)
     @export
     """
-    x_sort = x.sort_values().values
-    y_sort = y.sort_values().values
-
-    Combined_sort = np.unique(x_sort.append(y_sort).values)
-
+    x_sort = np.sort(x)
+    y_sort = np.sort(y)
+    Combined_sort = np.unique(np.append(x_sort, y_sort))
     LPM_x_sort = LPM(2, Combined_sort, x)
     LPM_y_sort = LPM(2, Combined_sort, y)
-
     x_tsd_y = np.any(LPM_x_sort > LPM_y_sort)
     y_tsd_x = np.any(LPM_y_sort > LPM_x_sort)
-
     if use_plot:
         plt.title("TSD")
         plt.ylabel("Area of Cumulative Distribution")

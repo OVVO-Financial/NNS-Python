@@ -29,15 +29,11 @@ def NNS_FSD(x: pd.Series, y: pd.Series, type_cdf: str = "discrete", use_plot: bo
     if type_cdf not in ["discrete", "continuous"]:
         raise Exception("type needs to be either 'discrete' or 'continuous'")
 
-    x_sort = x.sort_values()
-    y_sort = y.sort_values()
-    Combined_sort = np.unique(x_sort.append(y_sort).values)
+    x_sort = np.sort(x)
+    y_sort = np.sort(y)
+    Combined_sort = np.unique(np.append(x_sort, y_sort))
     ## Indicator function ***for all values of x and y*** as the continuous CDF target
-    if type_cdf == "discrete":
-        degree = 0
-    else:
-        degree = 1
-
+    degree = 0 if type_cdf == "discrete" else 1
     LPM_x_sort = LPM_ratio(degree, Combined_sort, x)
     LPM_y_sort = LPM_ratio(degree, Combined_sort, y)
 

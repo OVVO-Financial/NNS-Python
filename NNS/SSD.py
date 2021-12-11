@@ -22,17 +22,14 @@ def NNS_SSD(x: pd.Series, y: pd.Series, use_plot: bool = True) -> str:
     NNS.SSD(x, y)
     @export
     """
-    x_sort = x.sort_values().values
-    y_sort = y.sort_values().values
+    x_sort = np.sort(x)
+    y_sort = np.sort(y)
 
-    Combined_sort = np.unique(x_sort.append(y_sort).values)
-
+    Combined_sort = np.unique(np.append(x_sort, y_sort))
     LPM_x_sort = LPM(1, Combined_sort, x)
     LPM_y_sort = LPM(1, Combined_sort, y)
-
     x_ssd_y = np.any(LPM_x_sort > LPM_y_sort)
     y_ssd_x = np.any(LPM_y_sort > LPM_x_sort)
-
     if use_plot:
         plt.title("SSD")
         plt.ylabel("Area of Cumulative Distribution")
