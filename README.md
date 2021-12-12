@@ -23,8 +23,8 @@ Implemented Functions:
     * NNS_meboot_expand_sd: TODO
 
 * LPM UPM VaR
-    * LPM_VaR: TODO (tdigest)
-    * UPM_VaR: TODO (tdigest)
+    * LPM_VaR: OK (used np.quantile instead of tdigest and root_scalar instead of optimize)
+    * UPM_VaR: OK
 
 * Partial Moments
     * pd_fill_diagonal: OK (Internal use)
