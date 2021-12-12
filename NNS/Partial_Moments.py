@@ -455,8 +455,8 @@ def D_UPM(
 def PM_matrix(
     LPM_degree: [int, float],
     UPM_degree: [int, float],
-    target: [str, dict] = "mean",
-    variable: [pd.Series, pd.DataFrame, None] = None,
+    target: [str, dict, list, float, int, pd.Series, np.array] = "mean",
+    variable: [pd.Series, pd.DataFrame, np.ndarray, None] = None,
     pop_adj: bool = False,
 ) -> dict:
     r"""
@@ -504,41 +504,58 @@ def PM_matrix(
         }
     if isinstance(variable, pd.Series):
         variable = variable.to_frame()
-    assert isinstance(variable, pd.DataFrame), "supply a matrix-like (pd.DataFrame) 'variable'"
+    if isinstance(variable, np.ndarray) and len(variable.shape) == 1:
+        variable = variable.reshape(-1, 1)  # series to matrix like
+    assert isinstance(
+        variable, (pd.DataFrame, np.ndarray, np.matrix)
+    ), "supply a matrix-like (pd.DataFrame, np.ndarray, np.matrix) 'variable'"
+
     n = variable.shape[1]
+    variable_columns = (
+        variable.columns if isinstance(variable, pd.DataFrame) else list(range(variable.shape[1]))
+    )
 
     # target dict
     if isinstance(target, (list, pd.Series, np.ndarray)):
-        target = {c: target[i] for i, c in enumerate(variable.columns)}
+        target = {i: v for i, v in enumerate(target)}
     elif isinstance(target, str):
-        target = {i: getattr(variable[i], target)() for i in variable.columns}
+        # mean / median / mode
+        if isinstance(variable, pd.DataFrame):
+            target = {i: getattr(np, target)(variable.values[:, i]) for i in range(n)}
+        else:
+            target = {i: getattr(np, target)(variable[:, i]) for i in range(n)}
     elif isinstance(target, (int, float)):
-        target = {i: target for i in variable.columns}
-
+        target = {i: target for i in range(n)}
     # Partial moments lists
     clpms, cupms, dlpms, dupms = [], [], [], []
-    for i, cur_var in enumerate(variable.columns):
+    for cur_var in range(n):
         clpms.append([])
         cupms.append([])
         dlpms.append([])
         dupms.append([])
         # sapply(X, FUN, ..., simplify = TRUE, USE.NAMES = TRUE)
         # clpms[[i]] <- sapply(1 : n, function(b) Co.LPM(x = variable[ , i], y = variable[ , b], degree.x = LPM.degree, degree.y = LPM.degree, target.x = target[i], target.y = target[b]))
-        for b, cur_var2 in enumerate(variable.columns):
-            clpms[i].append(
+        for cur_var2 in range(n):
+            if isinstance(variable, pd.DataFrame):
+                x = variable.values[:, cur_var]
+                y = variable.values[:, cur_var2]
+            else:
+                x = variable[:, cur_var]
+                y = variable[:, cur_var2]
+            clpms[cur_var].append(
                 Co_LPM(
-                    x=variable[cur_var],
-                    y=variable[cur_var2],
+                    x=x,
+                    y=y,
                     degree_x=LPM_degree,
                     degree_y=LPM_degree,
                     target_x=target[cur_var],
                     target_y=target[cur_var2],
                 )
             )
-            cupms[i].append(
+            cupms[cur_var].append(
                 Co_UPM(
-                    x=variable[cur_var],
-                    y=variable[cur_var2],
+                    x=x,
+                    y=y,
                     degree_x=UPM_degree,
                     degree_y=UPM_degree,
                     target_x=target[cur_var],
@@ -548,23 +565,23 @@ def PM_matrix(
             #            dlpms[[i]] <- sapply(1 : n, function(b)
             #            D.LPM(x = variable[ , i], y = variable[ , b], degree.x = UPM.degree, degree.y = LPM.degree, target.x = target[i], target.y = target[b]))
             if cur_var == cur_var2:
-                dlpms[i].append(0.0)
-                dupms[i].append(0.0)
+                dlpms[cur_var].append(0.0)
+                dupms[cur_var].append(0.0)
             else:
-                dlpms[i].append(
+                dlpms[cur_var].append(
                     D_LPM(
-                        x=variable[cur_var],
-                        y=variable[cur_var2],
+                        x=x,
+                        y=y,
                         degree_x=UPM_degree,
                         degree_y=LPM_degree,
                         target_x=target[cur_var],
                         target_y=target[cur_var2],
                     )
                 )
-                dupms[i].append(
+                dupms[cur_var].append(
                     D_UPM(
-                        x=variable[cur_var],
-                        y=variable[cur_var2],
+                        x=x,
+                        y=y,
                         degree_x=LPM_degree,
                         degree_y=UPM_degree,
                         target_x=target[cur_var],
@@ -575,25 +592,25 @@ def PM_matrix(
     # clpm.matrix <- matrix(unlist(clpms), n, n)
     # colnames(clpm.matrix) <- colnames(variable)
     # rownames(clpm.matrix) <- colnames(variable)
-    clpm_matrix = pd.DataFrame(clpms, index=variable.columns, columns=variable.columns).T
+    clpm_matrix = pd.DataFrame(clpms, index=variable_columns, columns=variable_columns).T
 
     # cupm.matrix <- matrix(unlist(cupms), n, n)
     # colnames(cupm.matrix) <- colnames(variable)
     # rownames(cupm.matrix) <- colnames(variable)
-    cupm_matrix = pd.DataFrame(cupms, index=variable.columns, columns=variable.columns).T
+    cupm_matrix = pd.DataFrame(cupms, index=variable_columns, columns=variable_columns).T
 
     # dlpm.matrix <- matrix(unlist(dlpms), n, n)
     # diag(dlpm.matrix) <- 0
     # colnames(dlpm.matrix) <- colnames(variable)
     # rownames(dlpm.matrix) <- colnames(variable)
-    dlpm_matrix = pd.DataFrame(dlpms, index=variable.columns, columns=variable.columns).T
+    dlpm_matrix = pd.DataFrame(dlpms, index=variable_columns, columns=variable_columns).T
     # pd_fill_diagonal(dlpm_matrix, 0.0)
 
     # dupm.matrix <- matrix(unlist(dupms), n, n)
     # diag(dupm.matrix) <- 0
     # colnames(dupm.matrix) <- colnames(variable)
     # rownames(dupm.matrix) <- colnames(variable)
-    dupm_matrix = pd.DataFrame(dupms, index=variable.columns, columns=variable.columns).T
+    dupm_matrix = pd.DataFrame(dupms, index=variable_columns, columns=variable_columns).T
     # pd_fill_diagonal(dupm_matrix, 0.0)
 
     if pop_adj:
