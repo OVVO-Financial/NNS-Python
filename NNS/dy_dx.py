@@ -11,7 +11,7 @@ def dy_dx(x: pd.Series, y: pd.Series, eval_point: [float, int, str, None] = None
 
     @param x a numeric vector.
     @param y a numeric vector.
-    @param eval.point numeric or ("overall"); \code{x} point to be evaluated.  Defaults to \code{(eval.point = median(x))}.  Set to \code{(eval.point = "overall")} to find an overall partial derivative estimate (1st derivative only).
+    @param eval_point numeric or ("overall"); \code{x} point to be evaluated.  Defaults to \code{(eval.point = median(x))}.  Set to \code{(eval.point = "overall")} to find an overall partial derivative estimate (1st derivative only).
     @param deriv.method method of derivative estimation, options: ("NNS", "FD"); Determines the partial derivative from the coefficient of the \link{NNS.reg} output when \code{(deriv.method = "NNS")} or generates a partial derivative using the finite difference method \code{(deriv.method = "FD")} (Defualt).
     @return Returns a list of both 1st and 2nd derivative:
     \itemize{

@@ -616,7 +616,9 @@ def PM_matrix(
     }
 
 
-def LPM_ratio(degree: [int, float], target: [int, float, str, None], variable: pd.Series) -> float:
+def LPM_ratio(
+    degree: [int, float], target: [int, float, str, None], variable: [pd.Series, np.ndarray]
+) -> float:
     r"""
     Lower Partial Moment RATIO
 
@@ -659,7 +661,9 @@ def LPM_ratio(degree: [int, float], target: [int, float, str, None], variable: p
     return lpm / area
 
 
-def UPM_ratio(degree: [int, float], target: [int, float, str, None], variable: pd.Series) -> float:
+def UPM_ratio(
+    degree: [int, float], target: [int, float, str, None], variable: [pd.Series, np.ndarray]
+) -> float:
     r"""
     Upper Partial Moment RATIO
 

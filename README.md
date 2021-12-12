@@ -50,14 +50,14 @@ Implemented Functions:
         * _D_UPM: Internal User
         * _vec_D_UPM: numpy.vectorized
         * D_UPM: Vectorized / pandas / numpy friendly 
-    * PM_matrix: OK Tested
-    * LPM_ratio: OK Tested
-    * UPM_ratio: OK Tested
+    * PM_matrix: OK
+    * LPM_ratio: OK
+    * UPM_ratio: OK
     * NNS_PDF: Todo (d/dx approximation, density)
     * NNS_CDF: Todo (ecdf, density, matplotlib, NNS_reg)
 
 * SD Efficient Set
-    * NNS_SD_efficient_set: TODO
+    * NNS_SD_efficient_set: OK
     
 * FSD, SSD, TSD
     * NNS_FSD: OK
