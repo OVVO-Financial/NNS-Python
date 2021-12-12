@@ -27,7 +27,7 @@ Implemented Functions:
     * NNS.caus: TODO (deps: Uni.caus, NNS.caus.matrix)
 
 * Copula
-    * NNS.copula: Partial (deps: rgl::cube3d, plot 3d with 3 Series)
+    * NNS.copula: OK
     
 * Dependence
     * NNS.dep: TODO (deps: NNS.part, NNS.dep.matrix)
@@ -58,8 +58,9 @@ Implemented Functions:
     * RP: TODO (not in newest version)
 
 * LPM UPM VaR
-    * LPM_VaR: OK (used np.quantile instead of tdigest and root_scalar instead of optimize)
+    * LPM_VaR: OK
     * UPM_VaR: OK
+    * used np.quantile instead of tdigest, and root_scalar instead of optimize
 
 * Multivariate_Regression
     * NNS.M.reg: TODO (deps: NNS.part, NNS.dep, NNS::NNS.distance, NNS.copula, NNS.reg)
@@ -71,7 +72,7 @@ Implemented Functions:
     * NNS.meboot: TODO (deps: NNS.dep, NNS.meboot.expand.sd)
     
 * NNS_term_matrix
-    * NNS.term.matrix: TODO (nodeps)
+    * NNS.term.matrix: OK
 
 * NNS_VAR
     * NNS.VAR: TODO (deps: NNS.reg, NNS.seas, NNS.ARMA.optim, NNS.ARMA, NNS.stack, NNS.dep, NNS.caus)
@@ -122,7 +123,7 @@ Implemented Functions:
     * NNS.reg: TODO (deps: NNS.M.reg, NNS.dep, NNS.part, Uni.caus)
 
 * SD Efficient Set
-    * NNS_SD_efficient_set: OK (TODO: numba version)
+    * NNS_SD_efficient_set: OK (TODO: numba version?)
 
 * Seasonality_Test
     * NNS.seas: TODO (nodeps)
