@@ -484,54 +484,69 @@ class TestPartialMoments(unittest.TestCase):
 
     def test_PM_matrix(self):
         z = self.load_default_data()
-        ret = Partial_Moments.PM_matrix(LPM_degree=1, UPM_degree=1, target="mean", variable=z)
-        ret_default = self.load_default_PM_matrix_ret()
-        assert len(ret) == 5
-        assert (
-            "cupm" in ret
-            and "dupm" in ret
-            and "dlpm" in ret
-            and "clpm" in ret
-            and "cov.matrix" in ret
-        )
-        assert len(ret_default) == 5
-        assert (
-            "cupm" in ret_default
-            and "dupm" in ret_default
-            and "dlpm" in ret_default
-            and "clpm" in ret_default
-            and "cov.matrix" in ret_default
-        )
-        pd.testing.assert_frame_equal(
-            ret["cupm"],
-            ret_default["cupm"],
-            check_exact=False,
-            check_less_precise=6,
-        )
-        pd.testing.assert_frame_equal(
-            ret["dupm"],
-            ret_default["dupm"],
-            check_exact=False,
-            check_less_precise=6,
-        )
-        pd.testing.assert_frame_equal(
-            ret["dlpm"],
-            ret_default["dlpm"],
-            check_exact=False,
-            check_less_precise=6,
-        )
-        pd.testing.assert_frame_equal(
-            ret["clpm"],
-            ret_default["clpm"],
-            check_exact=False,
-            check_less_precise=6,
-        )
-        pd.testing.assert_frame_equal(
-            ret["cov.matrix"],
-            ret_default["cov.matrix"],
-            check_exact=False,
-            check_less_precise=6,
-        )
+        for i in [True, False]:
+            ret = Partial_Moments.PM_matrix(
+                LPM_degree=1, UPM_degree=1, target="mean", variable=z if i else z.values
+            )
+            ret_default = self.load_default_PM_matrix_ret()
+            if not i:
+                ret_default["cupm"].columns = [0, 1, 2]
+                ret_default["cupm"].index = [0, 1, 2]
+                ret_default["dupm"].columns = [0, 1, 2]
+                ret_default["dupm"].index = [0, 1, 2]
+                ret_default["dlpm"].columns = [0, 1, 2]
+                ret_default["dlpm"].index = [0, 1, 2]
+                ret_default["clpm"].columns = [0, 1, 2]
+                ret_default["clpm"].index = [0, 1, 2]
+                ret_default["cov.matrix"].columns = [0, 1, 2]
+                ret_default["cov.matrix"].index = [0, 1, 2]
+
+            assert len(ret) == 5
+            assert (
+                "cupm" in ret
+                and "dupm" in ret
+                and "dlpm" in ret
+                and "clpm" in ret
+                and "cov.matrix" in ret
+            )
+            assert len(ret_default) == 5
+            assert (
+                "cupm" in ret_default
+                and "dupm" in ret_default
+                and "dlpm" in ret_default
+                and "clpm" in ret_default
+                and "cov.matrix" in ret_default
+            )
+            pd.testing.assert_frame_equal(
+                ret["cupm"],
+                ret_default["cupm"],
+                check_exact=False,
+                check_less_precise=6,
+            )
+            pd.testing.assert_frame_equal(
+                ret["dupm"],
+                ret_default["dupm"],
+                check_exact=False,
+                check_less_precise=6,
+            )
+            pd.testing.assert_frame_equal(
+                ret["dlpm"],
+                ret_default["dlpm"],
+                check_exact=False,
+                check_less_precise=6,
+            )
+            pd.testing.assert_frame_equal(
+                ret["clpm"],
+                ret_default["clpm"],
+                check_exact=False,
+                check_less_precise=6,
+            )
+            pd.testing.assert_frame_equal(
+                ret["cov.matrix"],
+                ret_default["cov.matrix"],
+                check_exact=False,
+                check_less_precise=6,
+            )
 
     def test_LPM_ratio(self):
         x = self.load_default_data()["x"]

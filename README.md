@@ -15,7 +15,7 @@ Implemented Functions:
     * NNS.ARMA.optim: TODO (deps: NNS.ARMA)
     
 * Binary_ANOVA
-    * NNS.ANOVA.bin: TODO (nodeps)
+    * NNS.ANOVA.bin: OK
 
 * Boost
     * NNS.boost: TODO (deps: NNS.caus, NNS.reg, NNS.stack)
@@ -27,7 +27,7 @@ Implemented Functions:
     * NNS.caus: TODO (deps: Uni.caus, NNS.caus.matrix)
 
 * Copula
-    * NNS.copula: TODO (nodeps)
+    * NNS.copula: Partial (deps: rgl::cube3d, plot 3d with 3 Series)
     
 * Dependence
     * NNS.dep: TODO (deps: NNS.part, NNS.dep.matrix)
