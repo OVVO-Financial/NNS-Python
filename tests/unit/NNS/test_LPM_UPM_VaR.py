@@ -1,11 +1,26 @@
 # -*- coding: utf-8 -*-
 import unittest
+import numpy as np
 import pandas as pd
 from NNS.LPM_UPM_VaR import LPM_VaR, UPM_VaR
 
 
 class TestLPM_UPM_VaR(unittest.TestCase):
     COMPARISON_PRECISION = 7
+
+    def assertAlmostEqualArray(
+        self,
+        x: [pd.Series, np.ndarray, list, dict],
+        y: [pd.Series, np.ndarray, list, dict],
+        places: int = 7,
+    ) -> None:
+        self.assertEqual(len(x), len(y))
+        if isinstance(x, dict):
+            for i in x.keys():
+                self.assertAlmostEqual(x[i], y[i], places)
+        else:
+            for i in range(len(x)):
+                self.assertAlmostEqual(x[i], y[i], places)
 
     def test_LPM_VaR(self):
         x_tmp = self.load_default_data()["x"]
@@ -30,6 +45,32 @@ class TestLPM_UPM_VaR(unittest.TestCase):
             self.assertAlmostEqual(LPM_VaR(percentile=0.234, degree=2, x=x), 0.4165368, 3)
             self.assertAlmostEqual(LPM_VaR(percentile=0.234, degree=3, x=x), 0.4358702, 3)
             self.assertAlmostEqual(LPM_VaR(percentile=0.234, degree=4, x=x), 0.4490968, 3)
+
+            self.assertAlmostEqualArray(
+                LPM_VaR(percentile=[0, 0.234, 1], degree=0, x=x),
+                [0.01612921, 0.3116747, 0.9953585],
+                2,
+            )
+            self.assertAlmostEqualArray(
+                LPM_VaR(percentile=np.array([0, 0.234, 1]), degree=1, x=x),
+                [0.01612921, 0.3825485, 0.9953136],
+                3,
+            )
+            self.assertAlmostEqualArray(
+                LPM_VaR(percentile=np.array([0, 0.234, 1]), degree=2, x=x),
+                [0.01612921, 0.4165368, 0.995285],
+                3,
+            )
+            self.assertAlmostEqualArray(
+                LPM_VaR(percentile=np.array([0, 0.234, 1]), degree=3, x=x),
+                [0.01612921, 0.4358702, 0.9953104],
+                3,
+            )
+            self.assertAlmostEqualArray(
+                LPM_VaR(percentile=np.array([0, 0.234, 1]), degree=4, x=x),
+                [0.01612921, 0.4490968, 0.9953031],
+                3,
+            )
 
             for i in [0, 1, 2, 3, 4]:
                 # <0 is equal to 0
@@ -58,14 +99,39 @@ class TestLPM_UPM_VaR(unittest.TestCase):
             self.assertAlmostEqual(UPM_VaR(percentile=1, degree=3, x=x), 0.01620991, 3)
             self.assertAlmostEqual(UPM_VaR(percentile=1, degree=4, x=x), 0.01620278, 3)
 
-            # quantile from R with tdigest = 0.311 with
-            # python tdigest = 0.312
-            # python numpy = 0.312 (lower, nearest, linear) to 0.317 (midpoint, higher)
-            self.assertAlmostEqual(UPM_VaR(percentile=0.234, degree=0, x=x), 0.6951667, 3)
+            # quantile from R with tdigest = 0.6951667 with
+            # python numpy = 0.694
+            self.assertAlmostEqual(UPM_VaR(percentile=0.234, degree=0, x=x), 0.6949386960532218, 3)
             self.assertAlmostEqual(UPM_VaR(percentile=0.234, degree=1, x=x), 0.6201655, 3)
             self.assertAlmostEqual(UPM_VaR(percentile=0.234, degree=2, x=x), 0.5883855, 3)
             self.assertAlmostEqual(UPM_VaR(percentile=0.234, degree=3, x=x), 0.5718401, 3)
             self.assertAlmostEqual(UPM_VaR(percentile=0.234, degree=4, x=x), 0.5614293, 3)
+
+            self.assertAlmostEqualArray(
+                UPM_VaR(percentile=[0, 0.234, 1], degree=0, x=x),
+                [0.9953585, 0.6949386960532218, 0.01612921],
+                3,
+            )
+            self.assertAlmostEqualArray(
+                UPM_VaR(percentile=[0, 0.234, 1], degree=1, x=x),
+                [0.9953136, 0.6201655, 0.01620537],
+                3,
+            )
+            self.assertAlmostEqualArray(
+                UPM_VaR(percentile=[0, 0.234, 1], degree=2, x=x),
+                [0.995285, 0.5883855, 0.01617683],
+                3,
+            )
+            self.assertAlmostEqualArray(
+                UPM_VaR(percentile=[0, 0.234, 1], degree=3, x=x),
+                [0.9953104, 0.5718401, 0.01620991],
+                3,
+            )
+            self.assertAlmostEqualArray(
+                UPM_VaR(percentile=[0, 0.234, 1], degree=4, x=x),
+                [0.9953031, 0.5614293, 0.01620278],
+                3,
+            )
 
             for i in [0, 1, 2, 3, 4]:
                 # <0 is equal to 0
