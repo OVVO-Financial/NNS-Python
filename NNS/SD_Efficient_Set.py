@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from .Uni_SD_Routines import NNS_FSD_uni, NNS_SSD_uni, NNS_TSD_uni
 from .Partial_Moments import LPM
 
 
 def NNS_SD_efficient_set(
-    x: pd.DataFrame, degree: int, type_first_degree: str = "discrete", status: bool = True
+    x: [pd.DataFrame, np.ndarray],
+    degree: int,
+    type_first_degree: str = "discrete",
+    status: bool = True,
 ) -> [list, np.ndarray]:
     type_first_degree = type_first_degree.lower()
 

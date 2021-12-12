@@ -1,58 +1,83 @@
 # -*- coding: utf-8 -*-
 import unittest
-
 import pandas as pd
-import numpy as np
-
-from NNS.SD_Efficient_Set import NNS_SD_efficient_set
+from NNS.LPM_UPM_VaR import LPM_VaR, UPM_VaR
 
 
-class TestSD_Efficient_Set(unittest.TestCase):
+class TestLPM_UPM_VaR(unittest.TestCase):
     COMPARISON_PRECISION = 7
 
-    def assertEqualArray(
-        self, x: [pd.Series, np.ndarray, list, dict], y: [pd.Series, np.ndarray, list, dict]
-    ) -> None:
-        self.assertEqual(len(x), len(y))
-        if isinstance(x, dict):
-            for i in x.keys():
-                self.assertEqual(x[i], y[i])
-        else:
-            for i in range(len(x)):
-                self.assertEqual(x[i], y[i])
+    def test_LPM_VaR(self):
+        x_tmp = self.load_default_data()["x"]
+        for x in [x_tmp, x_tmp.values]:  # pandas / numpy
+            self.assertAlmostEqual(LPM_VaR(percentile=0, degree=0, x=x), 0.01612921, 3)
+            self.assertAlmostEqual(LPM_VaR(percentile=0, degree=1, x=x), 0.01620537, 3)
+            self.assertAlmostEqual(LPM_VaR(percentile=0, degree=2, x=x), 0.01617683, 3)
+            self.assertAlmostEqual(LPM_VaR(percentile=0, degree=3, x=x), 0.01620991, 3)
+            self.assertAlmostEqual(LPM_VaR(percentile=0, degree=4, x=x), 0.01620278, 3)
 
-    def test_NNS_SD_efficient_set(self):
-        z = self.load_default_data()
-        z["xx"] = z["x"] + 10
-        z["yy"] = z["y"] + 10
-        z["zz"] = z["z"] + 10
-        # R Code:
-        # a=data.frame(x,y,z,x+10,y+10,z+10)
-        # colnames(a) = c("x", "y", "z", "xx", "yy", "zz")
-        # NNS.SD.efficient.set(a, 1, "discrete", TRUE)
+            self.assertAlmostEqual(LPM_VaR(percentile=1, degree=0, x=x), 0.9953585, 3)
+            self.assertAlmostEqual(LPM_VaR(percentile=1, degree=1, x=x), 0.9953136, 3)
+            self.assertAlmostEqual(LPM_VaR(percentile=1, degree=2, x=x), 0.995285, 3)
+            self.assertAlmostEqual(LPM_VaR(percentile=1, degree=3, x=x), 0.9953104, 3)
+            self.assertAlmostEqual(LPM_VaR(percentile=1, degree=4, x=x), 0.9953031, 3)
 
-        # pandas
-        self.assertEqualArray(
-            NNS_SD_efficient_set(x=z, degree=1, type_first_degree="discrete", status=True),
-            ["yy", "zz", "xx"],
-        )
-        self.assertEqualArray(
-            NNS_SD_efficient_set(x=z, degree=1, type_first_degree="continuous", status=True),
-            ["yy", "zz", "xx"],
-        )
-        self.assertEqualArray(NNS_SD_efficient_set(x=z, degree=2, status=True), ["yy", "xx"])
-        self.assertEqualArray(NNS_SD_efficient_set(x=z, degree=3, status=True), ["yy", "xx"])
-        # ndarray
-        self.assertEqualArray(
-            NNS_SD_efficient_set(x=z.values, degree=1, type_first_degree="discrete", status=True),
-            [4, 5, 3],
-        )
-        self.assertEqualArray(
-            NNS_SD_efficient_set(x=z.values, degree=1, type_first_degree="continuous", status=True),
-            [4, 5, 3],
-        )
-        self.assertEqualArray(NNS_SD_efficient_set(x=z.values, degree=2, status=True), [4, 3])
-        self.assertEqualArray(NNS_SD_efficient_set(x=z.values, degree=3, status=True), [4, 3])
+            # quantile from R with tdigest = 0.311 with
+            # python tdigest = 0.312
+            # python numpy = 0.312 (lower, nearest, linear) to 0.317 (midpoint, higher)
+            self.assertAlmostEqual(LPM_VaR(percentile=0.234, degree=0, x=x), 0.3116747, 2)
+            self.assertAlmostEqual(LPM_VaR(percentile=0.234, degree=1, x=x), 0.3825485, 3)
+            self.assertAlmostEqual(LPM_VaR(percentile=0.234, degree=2, x=x), 0.4165368, 3)
+            self.assertAlmostEqual(LPM_VaR(percentile=0.234, degree=3, x=x), 0.4358702, 3)
+            self.assertAlmostEqual(LPM_VaR(percentile=0.234, degree=4, x=x), 0.4490968, 3)
+
+            for i in [0, 1, 2, 3, 4]:
+                # <0 is equal to 0
+                self.assertEqual(
+                    LPM_VaR(percentile=-1, degree=i, x=x),
+                    LPM_VaR(percentile=0, degree=i, x=x),
+                )
+                # >1 is equal to 1
+                self.assertEqual(
+                    LPM_VaR(percentile=2, degree=i, x=x),
+                    LPM_VaR(percentile=1, degree=i, x=x),
+                )
+
+    def test_UPM_VaR(self):
+        x_tmp = self.load_default_data()["x"]
+        for x in [x_tmp, x_tmp.values]:  # pandas / numpy
+            self.assertAlmostEqual(UPM_VaR(percentile=0, degree=0, x=x), 0.9953585, 3)
+            self.assertAlmostEqual(UPM_VaR(percentile=0, degree=1, x=x), 0.9953136, 3)
+            self.assertAlmostEqual(UPM_VaR(percentile=0, degree=2, x=x), 0.995285, 3)
+            self.assertAlmostEqual(UPM_VaR(percentile=0, degree=3, x=x), 0.9953104, 3)
+            self.assertAlmostEqual(UPM_VaR(percentile=0, degree=4, x=x), 0.9953031, 3)
+
+            self.assertAlmostEqual(UPM_VaR(percentile=1, degree=0, x=x), 0.01612921, 3)
+            self.assertAlmostEqual(UPM_VaR(percentile=1, degree=1, x=x), 0.01620537, 3)
+            self.assertAlmostEqual(UPM_VaR(percentile=1, degree=2, x=x), 0.01617683, 3)
+            self.assertAlmostEqual(UPM_VaR(percentile=1, degree=3, x=x), 0.01620991, 3)
+            self.assertAlmostEqual(UPM_VaR(percentile=1, degree=4, x=x), 0.01620278, 3)
+
+            # quantile from R with tdigest = 0.311 with
+            # python tdigest = 0.312
+            # python numpy = 0.312 (lower, nearest, linear) to 0.317 (midpoint, higher)
+            self.assertAlmostEqual(UPM_VaR(percentile=0.234, degree=0, x=x), 0.6951667, 3)
+            self.assertAlmostEqual(UPM_VaR(percentile=0.234, degree=1, x=x), 0.6201655, 3)
+            self.assertAlmostEqual(UPM_VaR(percentile=0.234, degree=2, x=x), 0.5883855, 3)
+            self.assertAlmostEqual(UPM_VaR(percentile=0.234, degree=3, x=x), 0.5718401, 3)
+            self.assertAlmostEqual(UPM_VaR(percentile=0.234, degree=4, x=x), 0.5614293, 3)
+
+            for i in [0, 1, 2, 3, 4]:
+                # <0 is equal to 0
+                self.assertEqual(
+                    UPM_VaR(percentile=-1, degree=i, x=x),
+                    UPM_VaR(percentile=0, degree=i, x=x),
+                )
+                # >1 is equal to 1
+                self.assertEqual(
+                    UPM_VaR(percentile=2, degree=i, x=x),
+                    UPM_VaR(percentile=1, degree=i, x=x),
+                )
 
     def load_default_data(self):
         # R Code:

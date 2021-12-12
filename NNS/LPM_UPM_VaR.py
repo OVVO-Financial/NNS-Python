@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
+import tdigest
 from .Partial_Moments import LPM, LPM_ratio
 import scipy.optimize
 
-# TODO: TESTS, tdigest::tdigest from R:
-def LPM_VaR(percentile: [float, int], degree: [float, int, str, None], x: pd.Series) -> float:
+
+def LPM_VaR(
+    percentile: [float, int], degree: [float, int, str, None], x: [pd.Series, np.ndarray, list]
+) -> float:
     r"""
     LPM VaR
 
@@ -26,66 +29,39 @@ def LPM_VaR(percentile: [float, int], degree: [float, int, str, None], x: pd.Ser
     LPM.VaR(0.05, 0, x)
     @export
     """
+    x_min = np.min(x)
+    x_max = np.max(x)
+    if x_min == x_max:
+        return x_min
 
-    #percentile <- pmax(pmin(percentile, 1), 0)
-    percentile = np.maximum(np.minimum(percentile, 1), 0)
-    l = len(x)
-    if(degree == 0):
-        # TODO: tdigest::tdigest from R:
-        # Create a new t-Digest histogram from a vector
-        # Description
-        # The t-Digest construction algorithm, by Dunning et al., uses a variant of 1-dimensional k-means
-        # clustering to produce a very compact data structure that allows accurate estimation of quantiles.
-        # This t-Digest data structure can be used to estimate quantiles, compute other rank statistics or
-        # even to estimate related measures like trimmed means. The advantage of the t-Digest over previous
-        # digests for this purpose is that the t-Digest handles data with full floating point resolution.
-        # The accuracy of quantile estimates produced by t-Digests can be orders of magnitude more accurate
-        # than those produced by previous digest algorithms. Methods are provided to create and update t-Digests
-        # and retrieve quantiles from the accumulated distributions.
-        #
-        # Usage
-        # tdigest(vec, compression = 100)
-        #
-        # ## S3 method for class 'tdigest'
-        # print(x, ...)
-        # Arguments
-        # vec - vector (will be converted to double if not already double). NOTE that this is ALTREP-aware and
-        #               will not materialize the passed-in object in order to add the values to the t-Digest.)
-        #
-        # compression -  the input compression value; should be >= 1.0; this will control how aggressively the
-        #               t-Digest compresses data together. The original t-Digest paper suggests using a value of
-        #               100 for a good balance between precision and efficiency. It will land at very small
-        #               (think like 1e-6 percentile points) errors at extreme points in the distribution, and
-        #               compression ratios of around 500 for large data sets (~1 million datapoints).
-        #               Defaults to 100.
-        #
-        # x	-  tdigest object
-        #
-        # ...	-  unused
-        #
-        # Value -  a tdigest object
-        #
-        # References - Computing Extremely Accurate Quantiles Using t-Digests
-        #
-        # Examples
-        # set.seed(1492)
-        # x <- sample(0:100, 1000000, replace = TRUE)
-        # td <- tdigest(x, 1000)
-        # tquantile(td, c(0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.99, 1))
-        # quantile(td)
+    percentile = max(min(percentile, 1.0), 0.0)
+    if percentile <= 0:
+        return x_min
+    elif percentile >= 1:
+        return x_max
+    if degree == 0:
+        # td = tdigest.TDigest()
+        # td.batch_update(x)
+        # return td.percentile(percentile)
+        return np.quantile(x, percentile, interpolation="linear")
+    # degree > 0
+    x0 = np.mean(x)
+    x_range = x_max - x_min
+    x1 = x_min if x_range == 0 else (x_range * percentile + x_min)
 
-
-        td = tdigest::tdigest(x, compression = max(100, np.log(l, 10)*100))
-        try:
-            q = tdigest::tquantile(td, percentile)
-        except Exception:
-            q = x.quantile(percentile)
-        return q
     def _func(b):
-        return abs(LPM_ratio(degree, b, x) - percentile)
-    ret = scipy.optimize.minimize(_func, x.mean(), bounds=(x.min(), x.max()))
-    return ret.x
-    #return(optimize(_func, c(min(x),max(x)))$minimum)
+        return LPM_ratio(degree, max(x_min, min(x_max, b)), x) - percentile
+
+    ret = scipy.optimize.root_scalar(
+        f=_func,
+        # method='bisect',
+        bracket=[x_min, x_max],
+        x0=x0,
+        x1=x1,
+    )
+    if not ret.converged:
+        raise Exception(f"Root find didn't converged: {ret}")
+    return ret.root
 
 
 def UPM_VaR(percentile: [float, int], degree: [float, int, str, None], x: pd.Series) -> float:
@@ -106,23 +82,38 @@ def UPM_VaR(percentile: [float, int], degree: [float, int, str, None], x: pd.Ser
     @export
     """
 
-    percentile = np.maximum(np.minimum(percentile, 1), 0)
-    l = len(x)
-    if(degree==0):
-        # TODO: tdigest::tdigest from R:
-        td = tdigest::tdigest(x, compression = max(100, np.log(l,10)*100))
-        try:
-            q = tdigest::tquantile(td, 1 - percentile)
-        except Exception:
-            q = x.quantile(1 - percentile)
-        return q
+    x_min = np.min(x)
+    x_max = np.max(x)
+    if x_min == x_max:
+        return x_min
+
+    percentile = max(min(percentile, 1.0), 0.0)
+    if percentile <= 0:
+        return x_max
+    elif percentile >= 1:
+        return x_min
+
+    if degree == 0:
+        # td = tdigest.TDigest()
+        # td.batch_update(x)
+        # return td.percentile(percentile)
+        return np.quantile(x, 1 - percentile, interpolation="linear")
+
+    # degree > 0
+    x0 = np.mean(x)
+    x_range = x_max - x_min
+    x1 = x_min if x_range == 0 else (x_range * (1 - percentile) + x_min)
 
     def _func(b):
-        return abs(LPM_ratio(degree, b, x) - (1-percentile))
-    ret = scipy.optimize.minimize(_func, x.mean(), bounds=(x.min(), x.max()))
+        return LPM_ratio(degree, max(x_min, min(x_max, b)), x) - (1 - percentile)
 
-
-    ret = scipy.optimize.minimize(_func, x.mean(), bounds=(x.min(), x.max()))
-    return ret.x
-    #return(optimize(_func, c(min(x),max(x)))$minimum)
-
+    ret = scipy.optimize.root_scalar(
+        f=_func,
+        # method='bisect',
+        bracket=[x_min, x_max],
+        x0=x0,
+        x1=x1,
+    )
+    if not ret.converged:
+        raise Exception(f"Root find didn't converged: {ret}")
+    return ret.root
