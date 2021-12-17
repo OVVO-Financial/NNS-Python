@@ -35,7 +35,6 @@ def NNS_TSD(x: pd.Series, y: pd.Series, use_plot: bool = True) -> str:
         plt.plot(Combined_sort, LPM_x_sort, label="<Combined Sort> vs <LPM X Sort>")
         plt.plot(Combined_sort, LPM_y_sort, label="<Combined Sort> vs <LPM Y Sort>")
         plt.legend()
-        ## TODO: plot
         # plot(
         #    LPM_x_sort,
         #    type="l",
