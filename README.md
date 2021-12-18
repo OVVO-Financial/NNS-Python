@@ -1,7 +1,7 @@
 # NNS-Python
 Nonlinear Nonparametric Statistics
 
-From R Version of 2020-07-26 (Version: 0.5.4.3, Date: 2020-07-25) 
+From Beta R Version of 2021-12-13 (Version: 8.4-Beta, Date: 2021-12-13) 
 
 Implemented Functions:
 

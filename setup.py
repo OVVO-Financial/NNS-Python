@@ -17,7 +17,6 @@ setup(
     description="Nonlinear nonparametric statistics using partial moments",
     long_description=long_description,
     long_description_content_type="text/markdown",  # Optional (see note above)
-    url="https://github.com/OVVO-Financial/NNS-Python",
     author="Fred Viole, Roberto Spadim",
     author_email="ovvo.financial.systems@gmail.com",
     classifiers=[  # Optional
