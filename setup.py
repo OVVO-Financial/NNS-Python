@@ -70,5 +70,6 @@ setup(
         "test": ["pytest-cov==2.10.0", "pytest==5.4.3"],
     },
     url="https://github.com/OVVO-Financial/NNS-Python/",
-    #download_url="https://github.com/OVVO-Financial/NNS-Python/",
+    # https://medium.com/@joel.barmettler/how-to-upload-your-python-package-to-pypi-65edc5fe9c56
+    download_url="https://github.com/OVVO-Financial/NNS-Python/archive/v_01.tar.gz",
 )
