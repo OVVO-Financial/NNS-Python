@@ -1,14 +1,16 @@
 import numpy as np
 from typing import Callable
+import scipy.optimize
+import scipy.linalg
 
 
 def NNS_diff(
-    f: Callable,
-    point: float,
-    h: float = 0.1,
-    tol: float = 1e-10,
-    digits: int = 12,  # not in use
-    print_trace: bool = False,
+        f: Callable,
+        point: float,
+        h: float = 0.1,
+        tol: float = 1e-10,
+        digits: int = 12,  # not in use
+        print_trace: bool = False,
 ) -> dict:
     r"""NNS Numerical Differentiation
 
@@ -48,7 +50,7 @@ def NNS_diff(
     # Bs <- numeric()
     # Bl <- numeric()
     # Bu <- numeric()
-    Bs, Bl, Bu = 0, {}, {}
+    Bs, Bl, Bu = {}, {}, {}
     ### Step 1 initalize the boundaries for B
 
     ### Initial step size h
@@ -93,11 +95,14 @@ def NNS_diff(
         Bu[i] = upper_B
         # TODO: understand function(x)
         # new.f <- function(x) - f.x + ((f.x - f(point - x)) / x) * point + new.B
-        new_f = function(x) - f_x + ((f_x - f(point - x)) / x) * point + new_B
-
         ###  SOLVE FOR h, we just need the negative or positive sign from the tested B
-        # TODO: scipy root
-        inferred_h = uniroot(new_f, c(-2 * h, 2 * h), extendInt="yes")["root"]
+        # inferred_h = uniroot(new_f, c(-2 * h, 2 * h), extendInt="yes")["root"]
+
+        inferred_h = scipy.optimize.root_scalar(
+            f=lambda x: - f_x + ((f_x - f(point - x)) / x) * point + new_B,
+            # method='bisect',
+            bracket=[-2 * h, 2 * h],
+        ).root
 
         if print_trace:
             print("Iteration", i, "h", inferred_h, "Lower B", lower_B, "Upper B", upper_B)
@@ -108,7 +113,7 @@ def NNS_diff(
         if abs(inferred_h) < tol:
             final_B = np.mean([upper_B, lower_B])
             # TODO: scipy solver
-            slope = solve(point, f_x - final_B)
+            slope = scipy.linalg.solve(point, f_x - final_B)[0]
             z = complex(real=point, imag=inferred_h)
 
             # TODO: graph
@@ -147,7 +152,7 @@ def NNS_diff(
                     "Value of f(x) at point": f(point),
                     "Final y-intercept (B)": final_B,
                     "DERIVATIVE": slope,
-                    "Inferred h": inferred_h,
+                    "Inferred.h": inferred_h,
                     "iterations": i,
                     "Averaged Finite Step Initial h": Finite_step(point, h)["next"],
                     "Inferred h": Finite_step(point, inferred_h),

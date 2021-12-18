@@ -46,7 +46,6 @@ def NNS_FSD(x: pd.Series, y: pd.Series, type_cdf: str = "discrete", use_plot: bo
         plt.plot(Combined_sort, LPM_x_sort, label="<Combined Sort> vs <LPM X Sort>")
         plt.plot(Combined_sort, LPM_y_sort, label="<Combined Sort> vs <LPM Y Sort>")
         plt.legend()
-        ## TODO: plot
         # plot(
         #    Combined_sort,
         #    LPM_x_sort,
