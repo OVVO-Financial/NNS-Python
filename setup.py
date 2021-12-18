@@ -13,7 +13,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 # Fields marked as "Optional" may be commented out.
 setup(
     name="NNS",
-    version="0.1.0",
+    version="0.1.1",
     description="Nonlinear nonparametric statistics using partial moments",
     long_description=long_description,
     long_description_content_type="text/markdown",  # Optional (see note above)
@@ -70,5 +70,5 @@ setup(
     },
     url="https://github.com/OVVO-Financial/NNS-Python/",
     # https://medium.com/@joel.barmettler/how-to-upload-your-python-package-to-pypi-65edc5fe9c56
-    download_url="https://github.com/OVVO-Financial/NNS-Python/archive/refs/tags/v_01.tar.gz",
+    download_url="https://github.com/OVVO-Financial/NNS-Python/archive/refs/tags/v_011.tar.gz",
 )
