@@ -63,6 +63,4 @@ def NNS_TSD(x: pd.Series, y: pd.Series, use_plot: bool = True) -> str:
     return "NO TSD EXISTS"
 
 
-__all__ = [
-    "NNS_TSD"
-]
+__all__ = ["NNS_TSD"]

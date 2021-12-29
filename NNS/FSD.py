@@ -67,6 +67,4 @@ def NNS_FSD(x: pd.Series, y: pd.Series, type_cdf: str = "discrete", use_plot: bo
     return "NO FSD EXISTS"
 
 
-__all__ = [
-    "NNS_FSD"
-]
+__all__ = ["NNS_FSD"]

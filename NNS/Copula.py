@@ -164,8 +164,4 @@ def NNS_copula(
     return None
 
 
-__all__ = [
-    "cuboid_data",
-    "plotCubeAt",
-    "NNS_copula"
-]
+__all__ = ["cuboid_data", "plotCubeAt", "NNS_copula"]

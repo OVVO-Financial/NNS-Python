@@ -156,6 +156,4 @@ def NNS_ANOVA_bin(
         }
 
 
-__all__ = [
-    "NNS_ANOVA_bin"
-]
+__all__ = ["NNS_ANOVA_bin"]

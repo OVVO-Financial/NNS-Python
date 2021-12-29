@@ -5,12 +5,12 @@ import scipy.linalg
 
 
 def NNS_diff(
-        f: Callable,
-        point: float,
-        h: float = 0.1,
-        tol: float = 1e-10,
-        digits: int = 12,  # not in use
-        print_trace: bool = False,
+    f: Callable,
+    point: float,
+    h: float = 0.1,
+    tol: float = 1e-10,
+    digits: int = 12,  # not in use
+    print_trace: bool = False,
 ) -> dict:
     r"""NNS Numerical Differentiation
 
@@ -99,7 +99,7 @@ def NNS_diff(
         # inferred_h = uniroot(new_f, c(-2 * h, 2 * h), extendInt="yes")["root"]
 
         inferred_h = scipy.optimize.root_scalar(
-            f=lambda x: - f_x + ((f_x - f(point - x)) / x) * point + new_B,
+            f=lambda x: -f_x + ((f_x - f(point - x)) / x) * point + new_B,
             # method='bisect',
             bracket=[-2 * h, 2 * h],
         ).root
@@ -182,6 +182,4 @@ def NNS_diff(
         i += 1
 
 
-__all__ = [
-    "NNS_diff"
-]
+__all__ = ["NNS_diff"]
