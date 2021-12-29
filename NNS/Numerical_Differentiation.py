@@ -180,3 +180,8 @@ def NNS_diff(
 
         new_B = np.mean([lower_B, upper_B])
         i += 1
+
+
+__all__ = [
+    "NNS_diff"
+]

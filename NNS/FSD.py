@@ -65,3 +65,8 @@ def NNS_FSD(x: pd.Series, y: pd.Series, type_cdf: str = "discrete", use_plot: bo
     if (not y_fsd_x) and (y_sort[0] >= x_sort[0]) and (not np.equal(LPM_x_sort, LPM_y_sort).all()):
         return "Y FSD X"
     return "NO FSD EXISTS"
+
+
+__all__ = [
+    "NNS_FSD"
+]

@@ -64,3 +64,8 @@ def NNS_SSD(x: pd.Series, y: pd.Series, use_plot: bool = True) -> str:
     ):
         return "Y SSD X"
     return "NO SSD EXISTS"
+
+
+__all__ = [
+    "NNS_SSD",
+]
