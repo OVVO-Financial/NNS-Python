@@ -13,3 +13,4 @@ from . import SSD
 from . import TSD
 from . import Uni_SD_Routines
 
+__version__ = "0.1.3"
