@@ -154,3 +154,8 @@ def NNS_ANOVA_bin(
             "Lower Bound Effect": Lower_Bound_Effect,
             "Upper Bound Effect": Upper_Bound_Effect,
         }
+
+
+__all__ = [
+    "NNS_ANOVA_bin"
+]

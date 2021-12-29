@@ -143,3 +143,7 @@ def dy_dx(x: pd.Series, y: pd.Series, eval_point: [float, int, str, None] = None
         "Second": second_deriv
     }
 
+
+__all__ = [
+    "dy_dx"
+]

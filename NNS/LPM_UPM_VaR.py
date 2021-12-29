@@ -148,3 +148,9 @@ def UPM_VaR(
     if isinstance(percentile, (np.ndarray, pd.Series, list)):
         func = _vec_UPM_VaR
     return func(percentile=percentile, degree=degree, x=x)
+
+
+__all__ = [
+    "LPM_VaR",
+    "UPM_VaR",
+]
