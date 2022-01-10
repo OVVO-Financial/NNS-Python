@@ -2,7 +2,7 @@
 import unittest
 import numpy as np
 import pandas as pd
-from NNS.NNS_term_matrix import NNS_term_matrix
+import NNS
 
 
 class TestNNS_term_matrix(unittest.TestCase):
@@ -10,7 +10,7 @@ class TestNNS_term_matrix(unittest.TestCase):
 
     def test_NNS_term_matrix(self):
         x = self.load_default_data()
-        ret = NNS_term_matrix(x["df"], names=True)
+        ret = NNS.NNS_term_matrix(x["df"], names=True)
         assert len(ret) == 2
         assert "IV" in ret and "DV" in ret
         pd.testing.assert_frame_equal(
@@ -21,7 +21,7 @@ class TestNNS_term_matrix(unittest.TestCase):
         )
         self.assertListEqual(list(ret["DV"]), list(x["ok_DV"]))
         # OOS
-        ret = NNS_term_matrix(x["df"], names=True, oos=x["OOS"])
+        ret = NNS.NNS_term_matrix(x["df"], names=True, oos=x["OOS"])
         assert len(ret) == 3
         assert "IV" in ret and "DV" in ret and "OOS" in ret
         pd.testing.assert_frame_equal(

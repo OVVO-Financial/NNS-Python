@@ -4,7 +4,7 @@ import unittest
 import pandas as pd
 import numpy as np
 
-from NNS.SD_Efficient_Set import NNS_SD_efficient_set
+import NNS
 
 
 class TestSD_Efficient_Set(unittest.TestCase):
@@ -33,26 +33,30 @@ class TestSD_Efficient_Set(unittest.TestCase):
 
         # pandas
         self.assertEqualArray(
-            NNS_SD_efficient_set(x=z, degree=1, type_first_degree="discrete", status=True),
+            NNS.NNS_SD_efficient_set(x=z, degree=1, type_first_degree="discrete", status=True),
             ["yy", "zz", "xx"],
         )
         self.assertEqualArray(
-            NNS_SD_efficient_set(x=z, degree=1, type_first_degree="continuous", status=True),
+            NNS.NNS_SD_efficient_set(x=z, degree=1, type_first_degree="continuous", status=True),
             ["yy", "zz", "xx"],
         )
-        self.assertEqualArray(NNS_SD_efficient_set(x=z, degree=2, status=True), ["yy", "xx"])
-        self.assertEqualArray(NNS_SD_efficient_set(x=z, degree=3, status=True), ["yy", "xx"])
+        self.assertEqualArray(NNS.NNS_SD_efficient_set(x=z, degree=2, status=True), ["yy", "xx"])
+        self.assertEqualArray(NNS.NNS_SD_efficient_set(x=z, degree=3, status=True), ["yy", "xx"])
         # ndarray
         self.assertEqualArray(
-            NNS_SD_efficient_set(x=z.values, degree=1, type_first_degree="discrete", status=True),
+            NNS.NNS_SD_efficient_set(
+                x=z.values, degree=1, type_first_degree="discrete", status=True
+            ),
             [4, 5, 3],
         )
         self.assertEqualArray(
-            NNS_SD_efficient_set(x=z.values, degree=1, type_first_degree="continuous", status=True),
+            NNS.NNS_SD_efficient_set(
+                x=z.values, degree=1, type_first_degree="continuous", status=True
+            ),
             [4, 5, 3],
         )
-        self.assertEqualArray(NNS_SD_efficient_set(x=z.values, degree=2, status=True), [4, 3])
-        self.assertEqualArray(NNS_SD_efficient_set(x=z.values, degree=3, status=True), [4, 3])
+        self.assertEqualArray(NNS.NNS_SD_efficient_set(x=z.values, degree=2, status=True), [4, 3])
+        self.assertEqualArray(NNS.NNS_SD_efficient_set(x=z.values, degree=3, status=True), [4, 3])
 
     def load_default_data(self):
         # R Code:
