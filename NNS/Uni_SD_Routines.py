@@ -30,14 +30,12 @@ def NNS_FSD_uni(
 
     if type_test not in ["discrete", "continuous"]:
         raise ValueError("type needs to be either discrete or continuous")
+    x_min, y_min = np.min(x), np.min(y)
 
-    if np.min(y) > np.min(x):
+    if y_min > x_min:
         return 0
 
-    x_sort = np.sort(x)
-    y_sort = np.sort(y)
-
-    Combined_sort = np.unique(np.append(x_sort, y_sort))
+    Combined_sort = np.unique(np.append(x, y))
     degree = 0 if type_test == "discrete" else 1
     L_x = LPM(degree, Combined_sort, x)
     LPM_x_sort = L_x / (UPM(degree, Combined_sort, x) + L_x)
@@ -45,7 +43,7 @@ def NNS_FSD_uni(
     LPM_y_sort = L_y / (UPM(degree, Combined_sort, y) + L_y)
     x_fsd_y = np.any(LPM_x_sort > LPM_y_sort)
 
-    if (not x_fsd_y) and (x_sort[0] >= y_sort[0]) and (not np.equal(LPM_x_sort, LPM_y_sort).all()):
+    if (not x_fsd_y) and (x_min >= y_min) and (not np.equal(LPM_x_sort, LPM_y_sort).all()):
         return 1
     return 0
 
@@ -67,15 +65,17 @@ def NNS_SSD_uni(x: [pd.Series, np.ndarray], y: [pd.Series, np.ndarray]) -> int:
     NNS.SSD.uni(x, y)
     @export
     """
-    if np.min(y) > np.min(x) or np.mean(y) > np.mean(x):
+    x_min, y_min = np.min(x), np.min(y)
+    if y_min > x_min:
         return 0
-    x_sort = np.sort(x)
-    y_sort = np.sort(y)
-    Combined_sort = np.unique(np.append(x_sort, y_sort))
+    x_mean, y_mean = np.mean(x), np.mean(y)
+    if y_mean > x_mean:
+        return 0
+    Combined_sort = np.unique(np.append(x, y))
     LPM_x_sort = LPM(1, Combined_sort, x)
     LPM_y_sort = LPM(1, Combined_sort, y)
     x_ssd_y = np.any(LPM_x_sort > LPM_y_sort)
-    if (not x_ssd_y) and (x_sort[0] >= y_sort[0]) and (not np.equal(LPM_x_sort, LPM_y_sort).all()):
+    if (not x_ssd_y) and (x_min >= y_min) and (not np.equal(LPM_x_sort, LPM_y_sort).all()):
         return 1
     return 0
 
@@ -97,16 +97,18 @@ def NNS_TSD_uni(x: [pd.Series, np.ndarray], y: [pd.Series, np.ndarray]) -> int:
     NNS.TSD.uni(x, y)
     @export
     """
-    if np.min(y) > np.min(x) or np.mean(y) > np.mean(x):
+    x_min, y_min = np.min(x), np.min(y)
+    if y_min > x_min:
         return 0
-    x_sort = np.sort(x)
-    y_sort = np.sort(y)
-    Combined_sort = np.unique(np.append(x_sort, y_sort))
+    x_mean, y_mean = np.mean(x), np.mean(y)
+    if y_mean > x_mean:
+        return 0
+    Combined_sort = np.unique(np.append(x, y))
     LPM_x_sort = LPM(2, Combined_sort, x)
     LPM_y_sort = LPM(2, Combined_sort, y)
     x_tsd_y = np.any(LPM_x_sort > LPM_y_sort)
 
-    if (not x_tsd_y) and (x_sort[0] >= y_sort[0]) and (not np.equal(LPM_x_sort, LPM_y_sort).all()):
+    if (not x_tsd_y) and (x_min >= y_min) and (not np.equal(LPM_x_sort, LPM_y_sort).all()):
         return 1
     return 0
 

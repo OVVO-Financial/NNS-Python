@@ -15,4 +15,4 @@ from .SSD import *
 from .TSD import *
 from .Uni_SD_Routines import *
 
-__version__ = "0.1.8"
+__version__ = "0.1.9"
