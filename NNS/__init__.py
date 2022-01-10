@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-from . import Binary_ANOVA
-from . import Copula
+from .Binary_ANOVA import *
+from .Copula import *
 
-# from . import dy_dx
-from . import FSD
+# from .dy_dx import *
+from .FSD import *
 
-# from . import Internal_Functions
-from . import LPM_UPM_VaR
-from . import NNS_term_matrix
-from . import Numerical_Differentiation
-from . import Partial_Moments
-from . import SD_Efficient_Set
-from . import SSD
-from . import TSD
-from . import Uni_SD_Routines
+# from .Internal_Functions import *
+from .LPM_UPM_VaR import *
+from .NNS_term_matrix import *
+from .Numerical_Differentiation import *
+from .Partial_Moments import *
+from .SD_Efficient_Set import *
+from .SSD import *
+from .TSD import *
+from .Uni_SD_Routines import *
 
-__version__ = "0.1.3"
+__version__ = "0.1.6"
