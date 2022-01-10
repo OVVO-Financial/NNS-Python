@@ -67,7 +67,7 @@ setup(
         "KDEpy>=1.1.0",
     ],
     extras_require={
-        "test": ["pytest-cov==2.10.0", "pytest==5.4.3"],g
+        "test": ["pytest-cov==2.10.0", "pytest==5.4.3"],
     },
     url="https://github.com/OVVO-Financial/NNS-Python/",
     # https://medium.com/@joel.barmettler/how-to-upload-your-python-package-to-pypi-65edc5fe9c56
