@@ -28,8 +28,8 @@ def numba_LPM(degree: [int, float], target: np.ndarray, variable: np.ndarray) ->
 
 def LPM(
     degree: [int, float],
-    target: [int, float, str, None, pd.Series, np.ndarray],
-    variable: [pd.Series, np.ndarray],
+    target: [int, float, str, None, pd.Series, np.ndarray, list],
+    variable: [pd.Series, np.ndarray, list],
 ) -> [float, np.ndarray]:
     r"""
     Lower Partial Moment
@@ -52,7 +52,11 @@ def LPM(
     if target is None:
         target = variable.mean()
     if isinstance(target, str):  # "mean"
-        target = getattr(variable, target)()
+        target = getattr(np, target)(variable)
+    if isinstance(target, list):
+        target = np.array(target)
+    if isinstance(variable, list):
+        variable = np.array(variable)
     if degree == 0:
         if isinstance(target, (np.ndarray, pd.Series, list)):
             return np.array([np.mean(variable <= i) for i in target])
@@ -61,18 +65,18 @@ def LPM(
         return numba_LPM(
             degree=degree,
             target=target,
-            variable=variable if isinstance(variable, np.ndarray) else variable.values,
+            variable=variable if not hasattr(variable, "values") else variable.values,
         )
     elif isinstance(target, pd.Series):
         return numba_LPM(
             degree=degree,
             target=target.values,
-            variable=variable if isinstance(variable, np.ndarray) else variable.values,
+            variable=variable if not hasattr(variable, "values") else variable.values,
         )
     return numba_LPM(
         degree=degree,
         target=np.array([target]),
-        variable=variable if isinstance(variable, np.ndarray) else variable.values,
+        variable=variable if not hasattr(variable, "values") else variable.values,
     )[0]
 
 
@@ -94,8 +98,8 @@ def numba_UPM(degree: [int, float], target: np.ndarray, variable: np.ndarray) ->
 
 def UPM(
     degree: [int, float],
-    target: [int, float, str, None, pd.Series, np.ndarray],
-    variable: [pd.Series, np.ndarray],
+    target: [int, float, str, None, pd.Series, np.ndarray, list],
+    variable: [pd.Series, np.ndarray, list],
 ) -> [float, np.ndarray]:
     r"""
     Upper Partial Moment
@@ -117,7 +121,11 @@ def UPM(
     if target is None:
         target = variable.mean()
     if isinstance(target, str):  # "mean"
-        target = getattr(variable, target)()
+        target = getattr(np, target)(variable)
+    if isinstance(target, list):
+        target = np.array(target)
+    if isinstance(variable, list):
+        variable = np.array(variable)
     if degree == 0:
         if isinstance(target, (np.ndarray, pd.Series, list)):
             return np.array([np.mean(variable > i) for i in target])
@@ -126,37 +134,37 @@ def UPM(
         return numba_UPM(
             degree=degree,
             target=target,
-            variable=variable if isinstance(variable, np.ndarray) else variable.values,
+            variable=variable if not hasattr(variable, "values") else variable.values,
         )
     elif isinstance(target, pd.Series):
         return numba_UPM(
             degree=degree,
             target=target.values,
-            variable=variable if isinstance(variable, np.ndarray) else variable.values,
+            variable=variable if not hasattr(variable, "values") else variable.values,
         )
     return numba_UPM(
         degree=degree,
         target=np.array([target]),
-        variable=variable if isinstance(variable, np.ndarray) else variable.values,
+        variable=variable if not hasattr(variable, "values") else variable.values,
     )[0]
 
 
 def _Co_UPM(
     degree_x: [float, int],
     degree_y: [float, int],
-    x: pd.Series,
-    y: pd.Series,
+    x: [pd.Series, np.ndarray, list],
+    y: [pd.Series, np.ndarray, list],
     target_x: [int, float, str, None] = None,
     target_y: [int, float, str, None] = None,
 ) -> float:
     if target_x is None:
-        target_x = x.mean()
+        target_x = np.mean(x)
     if target_y is None:
-        target_y = y.mean()
+        target_y = np.mean(y)
     if isinstance(target_x, str):  # "mean"
-        target_x = getattr(x, target_x)()
+        target_x = getattr(np, target_x)(x)
     if isinstance(target_y, str):  # "mean"
-        target_Y = getattr(y, target_y)()
+        target_y = getattr(np, target_y)(y)
 
     z = pd.DataFrame({"x": x, "y": y})
     z["x"] = z["x"] - target_x
@@ -179,8 +187,8 @@ def Co_UPM(
     degree_y: [float, int],
     x: pd.Series,
     y: pd.Series,
-    target_x: [int, float, str, None, pd.Series, np.ndarray] = None,
-    target_y: [int, float, str, None, pd.Series, np.ndarray] = None,
+    target_x: [int, float, str, None, pd.Series, np.ndarray, list] = None,
+    target_y: [int, float, str, None, pd.Series, np.ndarray, list] = None,
 ) -> [float, np.ndarray]:
     r"""
     Co-Upper Partial Moment
@@ -204,6 +212,10 @@ def Co_UPM(
     @export
     """
     func = _Co_UPM
+    if isinstance(target_x, list):
+        target_x = np.array(target_x)
+    if isinstance(target_y, list):
+        target_y = np.array(target_y)
     if isinstance(target_y, (np.ndarray, pd.Series)) or isinstance(
         target_x, (np.ndarray, pd.Series)
     ):
@@ -231,9 +243,9 @@ def _Co_LPM(
     if target_y is None:
         target_y = y.mean()
     if isinstance(target_x, str):  # "mean"
-        target_x = getattr(x, target_x)()
+        target_x = getattr(np, target_x)(x)
     if isinstance(target_y, str):  # "mean"
-        target_y = getattr(y, target_y)()
+        target_y = getattr(np, target_y)(y)
 
     z = pd.DataFrame({"x": x, "y": y})
     # z <- t(c(target.x, target.y) - t(z))
@@ -257,8 +269,8 @@ def Co_LPM(
     degree_y: [float, int],
     x: pd.Series,
     y: pd.Series,
-    target_x: [int, float, str, None, np.ndarray, pd.Series] = None,
-    target_y: [int, float, str, None, np.ndarray, pd.Series] = None,
+    target_x: [int, float, str, None, np.ndarray, pd.Series, list] = None,
+    target_y: [int, float, str, None, np.ndarray, pd.Series, list] = None,
 ) -> [float, np.ndarray]:
     r"""
     Co-Lower Partial Moment
@@ -282,6 +294,10 @@ def Co_LPM(
     @export
     """
     func = _Co_LPM
+    if isinstance(target_x, list):
+        target_x = np.array(target_x)
+    if isinstance(target_y, list):
+        target_y = np.array(target_y)
     if isinstance(target_y, (np.ndarray, pd.Series)) or isinstance(
         target_x, (np.ndarray, pd.Series)
     ):
@@ -309,9 +325,10 @@ def _D_LPM(
     if target_y is None:
         target_y = y.mean()
     if isinstance(target_x, str):  # "mean"
-        target_x = getattr(x, target_x)()
+        target_x = getattr(np, target_x)(x)
     if isinstance(target_y, str):  # "mean"
-        target_y = getattr(y, target_y)()
+        target_y = getattr(np, target_y)(y)
+
     z = pd.DataFrame({"x": x, "y": y})
     #   z[,1] <- z[,1] - target.x
     #   z[,2] <- target.y - z[,2]
@@ -335,8 +352,8 @@ def D_LPM(
     degree_y: [float, int],
     x: pd.Series,
     y: pd.Series,
-    target_x: [int, float, str, None, pd.Series, np.ndarray] = None,
-    target_y: [int, float, str, None, pd.Series, np.ndarray] = None,
+    target_x: [int, float, str, None, pd.Series, np.ndarray, list] = None,
+    target_y: [int, float, str, None, pd.Series, np.ndarray, list] = None,
 ) -> float:
     r"""
     Divergent-Lower Partial Moment
@@ -360,6 +377,10 @@ def D_LPM(
     @export
     """
     func = _D_LPM
+    if isinstance(target_x, list):
+        target_x = np.array(target_x)
+    if isinstance(target_y, list):
+        target_y = np.array(target_y)
     if isinstance(target_y, (np.ndarray, pd.Series)) or isinstance(
         target_x, (np.ndarray, pd.Series)
     ):
@@ -387,9 +408,9 @@ def _D_UPM(
     if target_y is None:
         target_y = y.mean()
     if isinstance(target_x, str):  # "mean"
-        target_x = getattr(x, target_x)()
+        target_x = getattr(np, target_x)(x)
     if isinstance(target_y, str):  # "mean"
-        target_y = getattr(y, target_y)()
+        target_y = getattr(np, target_y)(y)
     z = pd.DataFrame({"x": x, "y": y})
     # z[,1] <- target.x - z[,1]
     # z[,2] <- z[,2] - target.y
@@ -413,8 +434,8 @@ def D_UPM(
     degree_y: [int, float],
     x: pd.Series,
     y: pd.Series,
-    target_x: [int, float, str, None, pd.Series, np.ndarray] = None,
-    target_y: [int, float, str, None, pd.Series, np.ndarray] = None,
+    target_x: [int, float, str, None, pd.Series, np.ndarray, list] = None,
+    target_y: [int, float, str, None, pd.Series, np.ndarray, list] = None,
 ) -> float:
     r"""
     Divergent-Upper Partial Moment
@@ -438,6 +459,10 @@ def D_UPM(
     @export
     """
     func = _D_UPM
+    if isinstance(target_x, list):
+        target_x = np.array(target_x)
+    if isinstance(target_y, list):
+        target_y = np.array(target_y)
     if isinstance(target_y, (np.ndarray, pd.Series)) or isinstance(
         target_x, (np.ndarray, pd.Series)
     ):
@@ -455,8 +480,8 @@ def D_UPM(
 def PM_matrix(
     LPM_degree: [int, float],
     UPM_degree: [int, float],
-    target: [str, dict, list, float, int, pd.Series, np.array] = "mean",
-    variable: [pd.Series, pd.DataFrame, np.ndarray, None] = None,
+    target: [str, dict, list, float, int, pd.Series, np.array, list] = "mean",
+    variable: [pd.Series, pd.DataFrame, np.ndarray, None, list] = None,
     pop_adj: bool = False,
 ) -> dict:
     r"""
@@ -502,6 +527,10 @@ def PM_matrix(
             "clpm": None,
             "cov.matrix": None,
         }
+    if isinstance(variable, list):
+        variable = np.array(variable)
+    if isinstance(target, list):
+        target = np.array(target)
     if isinstance(variable, pd.Series):
         variable = variable.to_frame()
     if isinstance(variable, np.ndarray) and len(variable.shape) == 1:
@@ -634,8 +663,10 @@ def PM_matrix(
 
 
 def LPM_ratio(
-    degree: [int, float], target: [int, float, str, None], variable: [pd.Series, np.ndarray]
-) -> float:
+    degree: [int, float],
+    target: [int, float, str, None, pd.Series, np.ndarray, list],
+    variable: [pd.Series, np.ndarray, list],
+) -> [float, np.ndarray]:
     r"""
     Lower Partial Moment RATIO
 
@@ -679,8 +710,10 @@ def LPM_ratio(
 
 
 def UPM_ratio(
-    degree: [int, float], target: [int, float, str, None], variable: [pd.Series, np.ndarray]
-) -> float:
+    degree: [int, float],
+    target: [int, float, str, None, list, np.ndarray, pd.Series],
+    variable: [pd.Series, np.ndarray, list],
+) -> [float, np.ndarray]:
     r"""
     Upper Partial Moment RATIO
 
