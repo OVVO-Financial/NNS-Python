@@ -64,7 +64,7 @@ def NNS_SD_efficient_set(
                     new_base_sd_test = NNS_TSD_uni(base, challenger)
                 if new_base_sd_test != 0:
                     sd_found = True
-                    Dominated_set[i] = i + 1
+                    Dominated_set.append(i + 1)
                     break
             if not sd_found:
                 current_base.append(i + 1)
