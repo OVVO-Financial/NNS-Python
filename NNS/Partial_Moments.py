@@ -50,7 +50,7 @@ def LPM(
     """
 
     if target is None:
-        target = variable.mean()
+        target = np.mean(variable)
     if isinstance(target, str):  # "mean"
         target = getattr(np, target)(variable)
     if isinstance(target, list):
@@ -119,7 +119,7 @@ def UPM(
     @export
     """
     if target is None:
-        target = variable.mean()
+        target = np.mean(variable)
     if isinstance(target, str):  # "mean"
         target = getattr(np, target)(variable)
     if isinstance(target, list):
@@ -175,7 +175,7 @@ def _Co_UPM(
 
     z.dropna(inplace=True)
 
-    return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / x.shape[0]
+    return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / len(x)
 
 
 # Co.UPM <- Vectorize(Co.UPM, vectorize.args = c('target.x', 'target.y'))
@@ -185,8 +185,8 @@ _vec_Co_UPM = np.vectorize(_Co_UPM, excluded=["degree_x", "degree_y", "x", "y"])
 def Co_UPM(
     degree_x: [float, int],
     degree_y: [float, int],
-    x: pd.Series,
-    y: pd.Series,
+    x: [pd.Series, np.ndarray, list],
+    y: [pd.Series, np.ndarray, list],
     target_x: [int, float, str, None, pd.Series, np.ndarray, list] = None,
     target_y: [int, float, str, None, pd.Series, np.ndarray, list] = None,
 ) -> [float, np.ndarray]:
@@ -233,15 +233,15 @@ def Co_UPM(
 def _Co_LPM(
     degree_x: [float, int],
     degree_y: [float, int],
-    x: pd.Series,
-    y: pd.Series,
+    x: [pd.Series, np.ndarray, list],
+    y: [pd.Series, np.ndarray, list],
     target_x: [int, float, str, None] = None,
     target_y: [int, float, str, None] = None,
 ) -> float:
     if target_x is None:
-        target_x = x.mean()
+        target_x = np.mean(x)
     if target_y is None:
-        target_y = y.mean()
+        target_y = np.mean(y)
     if isinstance(target_x, str):  # "mean"
         target_x = getattr(np, target_x)(x)
     if isinstance(target_y, str):  # "mean"
@@ -257,7 +257,7 @@ def _Co_LPM(
 
     z.dropna(inplace=True)
 
-    return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / x.shape[0]
+    return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / len(x)
 
 
 # Co.LPM <- Vectorize(Co.LPM, vectorize.args = c('target.x', 'target.y'))
@@ -267,8 +267,8 @@ _vec_Co_LPM = np.vectorize(_Co_LPM, excluded=["degree_x", "degree_y", "x", "y"])
 def Co_LPM(
     degree_x: [float, int],
     degree_y: [float, int],
-    x: pd.Series,
-    y: pd.Series,
+    x: [pd.Series, np.ndarray, list],
+    y: [pd.Series, np.ndarray, list],
     target_x: [int, float, str, None, np.ndarray, pd.Series, list] = None,
     target_y: [int, float, str, None, np.ndarray, pd.Series, list] = None,
 ) -> [float, np.ndarray]:
@@ -315,15 +315,15 @@ def Co_LPM(
 def _D_LPM(
     degree_x: [float, int],
     degree_y: [float, int],
-    x: pd.Series,
-    y: pd.Series,
+    x: [pd.Series, np.ndarray, list],
+    y: [pd.Series, np.ndarray, list],
     target_x: [int, float, str, None] = None,
     target_y: [int, float, str, None] = None,
 ) -> float:
     if target_x is None:
-        target_x = x.mean()
+        target_x = np.mean(x)
     if target_y is None:
-        target_y = y.mean()
+        target_y = np.mean(y)
     if isinstance(target_x, str):  # "mean"
         target_x = getattr(np, target_x)(x)
     if isinstance(target_y, str):  # "mean"
@@ -340,7 +340,7 @@ def _D_LPM(
 
     z.dropna(inplace=True)
 
-    return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / x.shape[0]
+    return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / len(x)
 
 
 # D.LPM <- Vectorize(D.LPM, vectorize.args = c('target.x', 'target.y'))
@@ -350,8 +350,8 @@ _vec_D_LPM = np.vectorize(_D_LPM, excluded=["degree_x", "degree_y", "x", "y"])
 def D_LPM(
     degree_x: [float, int],
     degree_y: [float, int],
-    x: pd.Series,
-    y: pd.Series,
+    x: [pd.Series, np.ndarray, list],
+    y: [pd.Series, np.ndarray, list],
     target_x: [int, float, str, None, pd.Series, np.ndarray, list] = None,
     target_y: [int, float, str, None, pd.Series, np.ndarray, list] = None,
 ) -> float:
@@ -398,15 +398,15 @@ def D_LPM(
 def _D_UPM(
     degree_x: [int, float],
     degree_y: [int, float],
-    x: pd.Series,
-    y: pd.Series,
+    x: [pd.Series, np.ndarray, list],
+    y: [pd.Series, np.ndarray, list],
     target_x: [int, float, str, None] = None,
     target_y: [int, float, str, None] = None,
 ) -> float:
     if target_x is None:
-        target_x = x.mean()
+        target_x = np.mean(x)
     if target_y is None:
-        target_y = y.mean()
+        target_y = np.mean(y)
     if isinstance(target_x, str):  # "mean"
         target_x = getattr(np, target_x)(x)
     if isinstance(target_y, str):  # "mean"
@@ -422,7 +422,7 @@ def _D_UPM(
 
     z.dropna(inplace=True)
 
-    return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / x.shape[0]
+    return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / len(x)
 
 
 # D.UPM <- Vectorize(D.UPM, vectorize.args = c('target.x', 'target.y'))
@@ -432,8 +432,8 @@ _vec_D_UPM = np.vectorize(_D_UPM, excluded=["degree_x", "degree_y", "x", "y"])
 def D_UPM(
     degree_x: [int, float],
     degree_y: [int, float],
-    x: pd.Series,
-    y: pd.Series,
+    x: [pd.Series, np.ndarray, list],
+    y: [pd.Series, np.ndarray, list],
     target_x: [int, float, str, None, pd.Series, np.ndarray, list] = None,
     target_y: [int, float, str, None, pd.Series, np.ndarray, list] = None,
 ) -> float:
