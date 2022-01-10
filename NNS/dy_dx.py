@@ -48,7 +48,7 @@ def dy_dx(x: pd.Series, y: pd.Series, eval_point: [float, int, str, None] = None
     else:
         h = 0.2
 
-    if isinstance(x, pd.Series)::
+    if isinstance(x, pd.Series):
         x = pd.DataFrame(x, columns=[x.name])
 
     # TODO type of eval_point
