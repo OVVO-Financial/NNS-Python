@@ -4,3 +4,4 @@ scipy~=1.5.2
 numba~=0.51.2
 setuptools~=54.2.0
 matplotlib~=3.3.2
+KDEpy

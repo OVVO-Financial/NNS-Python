@@ -1,5 +1,4 @@
-from typing import Union, Tuple
-
+# -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -156,6 +155,4 @@ def NNS_ANOVA_bin(
         }
 
 
-__all__ = [
-    "NNS_ANOVA_bin"
-]
+__all__ = ["NNS_ANOVA_bin"]

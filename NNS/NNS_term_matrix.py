@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pandas as pd
 
 
@@ -188,6 +189,4 @@ def NNS_term_matrix(x: pd.DataFrame, oos: [None, pd.Series] = None, names: bool 
     return {"IV": NNS_TM, "DV": x.iloc[:, 1].values}
 
 
-__all__ = [
-    "NNS_term_matrix"
-]
+__all__ = ["NNS_term_matrix"]

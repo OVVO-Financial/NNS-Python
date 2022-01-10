@@ -111,8 +111,4 @@ def NNS_TSD_uni(x: [pd.Series, np.ndarray], y: [pd.Series, np.ndarray]) -> int:
     return 0
 
 
-__all__ = [
-    "NNS_FSD_uni",
-    "NNS_SSD_uni",
-    "NNS_TSD_uni"
-]
+__all__ = ["NNS_FSD_uni", "NNS_SSD_uni", "NNS_TSD_uni"]

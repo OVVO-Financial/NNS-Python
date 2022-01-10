@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,6 +6,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from .Partial_Moments import PM_matrix
 
+_tmp = Axes3D, Poly3DCollection  # just o avoid import lint errors
+del _tmp
 
 # https://stackoverflow.com/questions/49277753/python-matplotlib-plotting-cuboids
 def cuboid_data(o, size=(1, 1, 1)):
@@ -164,8 +167,4 @@ def NNS_copula(
     return None
 
 
-__all__ = [
-    "cuboid_data",
-    "plotCubeAt",
-    "NNS_copula"
-]
+__all__ = ["cuboid_data", "plotCubeAt", "NNS_copula"]
