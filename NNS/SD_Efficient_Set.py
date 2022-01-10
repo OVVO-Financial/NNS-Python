@@ -38,7 +38,7 @@ def NNS_SD_efficient_set(
     current_base.append(0)
     for i in range(n - 1):
         if status:
-            print(f"Checking {i} of {n-1}\r", end="")
+            print(f"Checking {i+1} of {n-1}\r", end="")
             if i == (n - 1):
                 print("                                        ", end="\n")
         base, challenger = final_ranked[:, current_base[-1]], final_ranked[:, i + 1]
