@@ -14,9 +14,9 @@ def _LPM_VaR(
         return x_min
 
     percentile = max(min(percentile, 1.0), 0.0)
-    #if percentile <= 0:
+    # if percentile <= 0:
     #    return x_min
-    #elif percentile >= 1:
+    # elif percentile >= 1:
     #    return x_max
     # force float variable
     if degree == 0:
@@ -92,9 +92,9 @@ def _UPM_VaR(
         return x_min
 
     percentile = max(min(percentile, 1.0), 0.0)
-    #if percentile <= 0:
+    # if percentile <= 0:
     #    return x_max
-    #elif percentile >= 1:
+    # elif percentile >= 1:
     #    return x_min
     # force float variable
     if degree == 0:

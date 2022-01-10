@@ -808,7 +808,9 @@ class TestPartialMoments(unittest.TestCase):
             Partial_Moments.LPM_ratio(degree=2, target="mean", variable=x), 0.49720627
         )
         # list
-        self.assertAlmostEqual(Partial_Moments.LPM_ratio(degree=0, target="mean", variable=list(x)), 0.49)
+        self.assertAlmostEqual(
+            Partial_Moments.LPM_ratio(degree=0, target="mean", variable=list(x)), 0.49
+        )
         self.assertAlmostEqual(
             Partial_Moments.LPM_ratio(degree=1, target="mean", variable=list(x)), 0.5000000000000002
         )
@@ -825,8 +827,10 @@ class TestPartialMoments(unittest.TestCase):
         self.assertAlmostEqual(
             Partial_Moments.UPM_ratio(degree=2, target="mean", variable=x), 0.5027937984146681
         )
-        #list
-        self.assertAlmostEqual(Partial_Moments.UPM_ratio(degree=0, target='mean', variable=list(x)), 0.51)
+        # list
+        self.assertAlmostEqual(
+            Partial_Moments.UPM_ratio(degree=0, target="mean", variable=list(x)), 0.51
+        )
         self.assertAlmostEqual(
             Partial_Moments.UPM_ratio(degree=1, target="mean", variable=list(x)), 0.4999999999999999
         )
