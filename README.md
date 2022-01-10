@@ -143,3 +143,9 @@ Implemented Functions:
     * NNS_FSD_uni: OK (TODO: numba version?)
     * NNS_SSD_uni: OK (TODO: numba version?)
     * NNS_TSD_uni: OK (TODO: numba version?)
+
+* Others Todos:
+    * Try to make names equal to R version 
+      * R accept $ and . we will replace to underline _
+      * TODO: R export functions from modules 
+      

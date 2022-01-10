@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
-import tdigest
-from .Partial_Moments import LPM, LPM_ratio
+from .Partial_Moments import LPM_ratio
 import scipy.optimize
 
 
 def _LPM_VaR(
-    percentile: [float, int], degree: [float, int, str, None], x: [pd.Series, np.ndarray]
+    percentile: [float, int], degree: [float, int, str, None], x: [pd.Series, np.ndarray, list]
 ) -> float:
     x_min = np.min(x)
     x_max = np.max(x)
@@ -15,21 +14,25 @@ def _LPM_VaR(
         return x_min
 
     percentile = max(min(percentile, 1.0), 0.0)
-    if percentile <= 0:
-        return x_min
-    elif percentile >= 1:
-        return x_max
+    # if percentile <= 0:
+    #    return x_min
+    # elif percentile >= 1:
+    #    return x_max
+    # force float variable
     if degree == 0:
         # td = tdigest.TDigest()
         # td.batch_update(x)
         # return td.percentile(percentile)
         return np.quantile(x, percentile, interpolation="linear")
     # degree > 0
+    x = np.array(x, dtype=float)
+    x_max = float(x_max)
+    x_min = float(x_min)
     x0 = np.mean(x)
     x_range = x_max - x_min
     x1 = x_min if x_range == 0 else (x_range * percentile + x_min)
 
-    def _func(b):
+    def _func(b: float) -> float:
         return LPM_ratio(degree, max(x_min, min(x_max, b)), x) - percentile
 
     ret = scipy.optimize.root_scalar(
@@ -50,7 +53,7 @@ _vec_LPM_VaR = np.vectorize(_LPM_VaR, excluded=["degree", "x"])
 def LPM_VaR(
     percentile: [float, int, np.array, pd.Series, list],
     degree: [float, int, str, None],
-    x: [pd.Series, np.ndarray],
+    x: [pd.Series, np.ndarray, list],
 ) -> [float, np.array]:
     r"""
     LPM VaR
@@ -89,11 +92,11 @@ def _UPM_VaR(
         return x_min
 
     percentile = max(min(percentile, 1.0), 0.0)
-    if percentile <= 0:
-        return x_max
-    elif percentile >= 1:
-        return x_min
-
+    # if percentile <= 0:
+    #    return x_max
+    # elif percentile >= 1:
+    #    return x_min
+    # force float variable
     if degree == 0:
         # td = tdigest.TDigest()
         # td.batch_update(x)
@@ -101,11 +104,14 @@ def _UPM_VaR(
         return np.quantile(x, 1 - percentile, interpolation="linear")
 
     # degree > 0
+    x = np.array(x, dtype=float)
+    x_max = float(x_max)
+    x_min = float(x_min)
     x0 = np.mean(x)
     x_range = x_max - x_min
     x1 = x_min if x_range == 0 else (x_range * (1 - percentile) + x_min)
 
-    def _func(b):
+    def _func(b: float) -> float:
         return LPM_ratio(degree, max(x_min, min(x_max, b)), x) - (1 - percentile)
 
     ret = scipy.optimize.root_scalar(

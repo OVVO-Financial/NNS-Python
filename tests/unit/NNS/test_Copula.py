@@ -3,7 +3,7 @@ import unittest
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from NNS.Copula import NNS_copula
+import NNS
 
 
 class TestCopula(unittest.TestCase):
@@ -16,30 +16,32 @@ class TestCopula(unittest.TestCase):
         # > NNS.copula(a)
         # [1] 0.1659905
         # pandas
-        self.assertAlmostEqual(NNS_copula(z1, continuous=True, plot=False), 0.1659905)
-        self.assertAlmostEqual(NNS_copula(z1, continuous=False, plot=False), 0.07692308)
+        self.assertAlmostEqual(NNS.NNS_copula(z1, continuous=True, plot=False), 0.1659905)
+        self.assertAlmostEqual(NNS.NNS_copula(z1, continuous=False, plot=False), 0.07692308)
 
         # numpy
-        self.assertAlmostEqual(NNS_copula(z1.values, continuous=True, plot=False), 0.1659905)
-        self.assertAlmostEqual(NNS_copula(z1.values, continuous=False, plot=False), 0.07692308)
+        self.assertAlmostEqual(NNS.NNS_copula(z1.values, continuous=True, plot=False), 0.1659905)
+        self.assertAlmostEqual(NNS.NNS_copula(z1.values, continuous=False, plot=False), 0.07692308)
 
         # 3d
         # pandas
         self.assertAlmostEqual(
-            NNS_copula(z, continuous=True, plot=True, independence_overlay=False), 0.1191304
+            NNS.NNS_copula(z, continuous=True, plot=True, independence_overlay=False), 0.1191304
         )
         plt.close()
         self.assertAlmostEqual(
-            NNS_copula(z, continuous=True, plot=True, independence_overlay=True), 0.1191304
+            NNS.NNS_copula(z, continuous=True, plot=True, independence_overlay=True), 0.1191304
         )
         plt.close()
         # numpy
         self.assertAlmostEqual(
-            NNS_copula(z.values, continuous=True, plot=True, independence_overlay=False), 0.1191304
+            NNS.NNS_copula(z.values, continuous=True, plot=True, independence_overlay=False),
+            0.1191304,
         )
         plt.close()
         self.assertAlmostEqual(
-            NNS_copula(z.values, continuous=True, plot=True, independence_overlay=True), 0.1191304
+            NNS.NNS_copula(z.values, continuous=True, plot=True, independence_overlay=True),
+            0.1191304,
         )
         plt.close()
 

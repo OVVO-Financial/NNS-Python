@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from NNS.Binary_ANOVA import NNS_ANOVA_bin
+import NNS
 
 
 class TestNNS_ANOVA_bin(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestNNS_ANOVA_bin(unittest.TestCase):
         # TODO: Better unit test
         for i in [True, False]:  # pandas / numpy, plot / not plot
             self.assertAlmostEqualArray(
-                NNS_ANOVA_bin(
+                NNS.NNS_ANOVA_bin(
                     x if i else x.values, y if i else y.values, confidence_interval=None, plot=i
                 ),
                 {
@@ -48,7 +48,7 @@ class TestNNS_ANOVA_bin(unittest.TestCase):
                 # plt.show()
                 plt.close()
             self.assertAlmostEqualArray(
-                NNS_ANOVA_bin(
+                NNS.NNS_ANOVA_bin(
                     x if i else x.values,
                     y if i else y.values,
                     plot=i,
@@ -72,7 +72,7 @@ class TestNNS_ANOVA_bin(unittest.TestCase):
                 # plt.show()
                 plt.close()
             self.assertAlmostEqualArray(
-                NNS_ANOVA_bin(
+                NNS.NNS_ANOVA_bin(
                     x if i else x.values,
                     y if i else y.values,
                     plot=i,
@@ -96,7 +96,7 @@ class TestNNS_ANOVA_bin(unittest.TestCase):
                 # plt.show()
                 plt.close()
             self.assertAlmostEqualArray(
-                NNS_ANOVA_bin(
+                NNS.NNS_ANOVA_bin(
                     x if i else x.values,
                     y if i else y.values,
                     plot=i,
