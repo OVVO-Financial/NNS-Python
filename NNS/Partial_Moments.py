@@ -528,7 +528,7 @@ def PM_matrix(
             "cov.matrix": None,
         }
     if isinstance(variable, list):
-        variable = np.array(variable)
+        variable = np.column_stack(variable)
     if isinstance(target, list):
         target = np.array(target)
     if isinstance(variable, pd.Series):
