@@ -520,13 +520,7 @@ def PM_matrix(
     """
 
     if variable is None:
-        return {
-            "cupm": None,
-            "dupm": None,
-            "dlpm": None,
-            "clpm": None,
-            "cov.matrix": None,
-        }
+        return {"cupm": None, "dupm": None, "dlpm": None, "clpm": None, "cov.matrix": None}
     if isinstance(variable, list):
         variable = np.column_stack(variable)
     if isinstance(target, list):
