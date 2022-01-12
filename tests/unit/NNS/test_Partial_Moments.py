@@ -622,7 +622,7 @@ class TestPartialMoments(unittest.TestCase):
             [2.150991e-02, 1.045718e-04, 3.685723e-02, 7.789023e-04, 5.293443e-04, 3.938325e-06],
         )
 
-    def test_PM_matrix_small(self):
+    def test_PM_matrix_cov_pop_adj(self):
         #      x y
         # [1,] 1 2
         # [2,] 1 2
@@ -646,6 +646,8 @@ class TestPartialMoments(unittest.TestCase):
         b = NNS.PM_matrix(1, 1, "mean", Test, pop_adj=False)["cov.matrix"]
         np.testing.assert_almost_equal(a.values, ret_A)
         np.testing.assert_almost_equal(b.values, ret_B)
+        np.testing.assert_almost_equal(a.values, np.cov(Test.T, ddof=1))
+        np.testing.assert_almost_equal(b.values, np.cov(Test.T, ddof=0))
 
     def test_PM_matrix_csv(self):
         df = pd.read_csv("pm_matrix_test.csv")
@@ -654,21 +656,15 @@ class TestPartialMoments(unittest.TestCase):
         # pandas
         ret1 = NNS.PM_matrix(LPM_degree=1, UPM_degree=1, target="mean", variable=df)
         ret2 = NNS.PM_matrix(LPM_degree=1, UPM_degree=1, target="mean", variable=df, pop_adj=True)
-        # TODO:
-        if False:
-            self.assertAlmostEqualArray(ret1["cov.matrix"], np.cov(df.T, ddof=0))
-            # https://github.com/numpy/numpy/issues/20800
-            self.assertAlmostEqualArray(ret2["cov.matrix"], np.cov(df.T, ddof=1))
+        np.testing.assert_almost_equal(ret1["cov.matrix"].values, np.cov(df.T, ddof=0))
+        np.testing.assert_almost_equal(ret2["cov.matrix"].values, np.cov(df.T, ddof=1))
         # numpy
         ret1 = NNS.PM_matrix(LPM_degree=1, UPM_degree=1, target="mean", variable=df_np)
         ret2 = NNS.PM_matrix(
             LPM_degree=1, UPM_degree=1, target="mean", variable=df_np, pop_adj=True
         )
-        # TODO:
-        if False:
-            # https://github.com/numpy/numpy/issues/20800
-            self.assertAlmostEqualArray(ret1["cov.matrix"], np.cov(df_np.T, ddof=0))
-            self.assertAlmostEqualArray(ret2["cov.matrix"], np.cov(df_np.T, ddof=1))
+        np.testing.assert_almost_equal(ret1["cov.matrix"].values, np.cov(df.T, ddof=0))
+        np.testing.assert_almost_equal(ret2["cov.matrix"].values, np.cov(df.T, ddof=1))
 
     def test_PM_matrix(self):
         z = self.load_default_data()
