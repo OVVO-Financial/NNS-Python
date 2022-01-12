@@ -2,6 +2,10 @@
 import numpy as np
 import pandas as pd
 import numba
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from . import Internal_Functions
 
 
 def pd_fill_diagonal(df_matrix: pd.DataFrame, value) -> None:
@@ -744,7 +748,7 @@ def NNS_PDF(
     variable: pd.Series,
     degree: [int, float] = 1,
     target: [float, int, str, None] = None,
-    bins: [int, None] = None,
+    bins: [float, int, None] = None,
     plot: bool = True,
 ) -> pd.DataFrame:
     # TODO: CONVERT/TEST
@@ -752,47 +756,13 @@ def NNS_PDF(
         target = variable.sort_values()
     # d/dx approximation
     if bins is None:
-        # python:
-        # https://numpy.org/doc/stable/reference/generated/numpy.histogram.html
-        # https://stackoverflow.com/questions/9141732/how-does-numpy-histogram-work
-        # https://stackoverflow.com/questions/33967513/creating-density-estimate-in-numpy
-        # https://jakevdp.github.io/blog/2013/12/01/kernel-density-estimation/
-        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html
-
-        #
-        ## Default S3 method:
-        # density(x, bw = "nrd0", adjust = 1,
-        #        kernel = c("gaussian", "epanechnikov", "rectangular",
-        #                   "triangular", "biweight",
-        #                   "cosine", "optcosine"),
-        #        weights = NULL, window = kernel, width,
-        #        give.Rkern = FALSE,
-        #        n = 512, from, to, cut = 3, na.rm = FALSE, ...)
-        # bins <- density(variable)$bw
-        # $bw = the bandwidth used.
-        #
-        # > bw.nrd0
-        # function (x)
-        # {
-        #     if (length(x) < 2L)
-        #         stop("need at least 2 data points")
-        #     hi <- sd(x)
-        #     if (!(lo <- min(hi, IQR(x)/1.34)))
-        #         (lo <- hi) || (lo <- abs(x[1L])) || (lo <- 1)
-        #     0.9 * lo * length(x)^(-0.2)
-        # }
-        # > IQR
-        # function (x, na.rm = FALSE, type = 7)
-        # diff(quantile(as.numeric(x), c(0.25, 0.75), na.rm = na.rm, names = FALSE,
-        #     type = type))
-
-        # TODO: Understand R density()$bw function
-        bins = 4
-        # bins = density(variable)$bw
-        tgt = np.arange(target.min(), target.max(), bins)
+        # bins < - density(variable)$bw
+        bins = Internal_Functions.bw_nrd0(variable)
+        # tgt < - seq(min(target), max(target), bins)
+        tgt = np.arange(np.min(target), np.max(target), bins)
     else:
-        d_dx = (target.max().abs() + target.min().abs()) / bins
-        tgt = np.arange(target.min(), target.max(), d_dx)
+        d_dx = (np.abs(np.max(target)) + np.abs(np.min(target))) / bins
+        tgt = np.arange(np.min(target), np.max(target), d_dx)
 
     # TODO: Check return of function CDF and ['function'] dict
     CDF = NNS_CDF(variable=variable, degree=degree, target=None, type="CDF", plot=False)["Function"]
@@ -810,65 +780,115 @@ def NNS_PDF(
 
 
 def NNS_CDF(
-    variable: [pd.Series, pd.DataFrame],
+    variable: [pd.Series, pd.DataFrame, np.ndarray, list],
     degree: [float, int] = 0,
     target: [float, int, None] = None,
-    type: str = "CDF",
+    _type: str = "CDF",
     plot: bool = True,
+    **kwargs,
 ) -> dict:
+    if "type" in kwargs:
+        # R compatibility
+        _type = kwargs["type"]
+
     # TODO: CONVERT/TEST
+    if isinstance(variable, list) and isinstance(variable[0], (np.ndarray, pd.Series)):
+        variable = np.column_stack(variable)
+    single_variable = (
+        isinstance(variable, pd.Series)
+        or (
+            hasattr(variable, "shape")
+            and (
+                (len(variable.shape) == 2 and variable.shape[1] == 1) or (len(variable.shape) == 1)
+            )
+        )
+        or (
+            isinstance(variable, list)
+            and not isinstance(variable[0], (np.ndarray, pd.Series, list))
+        )
+    )
+
     if target is not None:
-        # TODO: use iloc[] / loc[]
-        if isinstance(variable, pd.Series) or variable.shape[1] == 1:
-            if target < variable.min() or target > variable.max():
+        if isinstance(target, list):
+            if isinstance(target[0], list):
+                target = np.column_stack([np.array(i) for i in target])
+            else:
+                target = np.column_stack(target)
+
+        if single_variable:
+            if np.any(target < np.min(variable)) or np.any(target > np.max(variable)):
                 raise ValueError(
                     "Please make sure target is within the observed values of variable."
                 )
         else:
-            if target[1] < variable[:, 1].min() or target[1] > variable[:, 1].max():
-                raise ValueError(
-                    "Please make sure target 1 is within the observed values of variable 1."
-                )
-            if target[2] < variable[:, 2].min() or target[2] > variable[:, 2].max():
-                raise ValueError(
-                    "Please make sure target 2 is within the observed values of variable 2."
-                )
+            if isinstance(variable, pd.DataFrame):
+                # pandas, using .values[]
+                if np.any(target[:, 0] < np.min(variable.values[:, 0])) or np.any(
+                    target[:, 0] > np.max(variable.values[:, 0])
+                ):
+                    raise ValueError(
+                        "Please make sure target 1 is within the observed values of variable 1."
+                    )
+                if np.any(target[:, 1] < np.min(variable.values[:, 1])) or np.any(
+                    target[:, 1] > np.max(variable.values[:, 1])
+                ):
+                    raise ValueError(
+                        "Please make sure target 2 is within the observed values of variable 2."
+                    )
+            else:
+                if np.any(target[:, 0] < np.min(variable[:, 0])) or np.any(
+                    target[:, 0] > np.max(variable[:, 0])
+                ):
+                    raise ValueError(
+                        "Please make sure target 1 is within the observed values of variable 1."
+                    )
+                if np.any(target[:, 1] < np.min(variable[:, 1])) or np.any(
+                    target[:, 1] > np.max(variable[:, 1])
+                ):
+                    raise ValueError(
+                        "Please make sure target 2 is within the observed values of variable 2."
+                    )
 
-    cdf_type = type.lower().strip()
+    cdf_type = _type.lower().strip()
     if cdf_type not in ["cdf", "survival", "hazard", "cumulative hazard"]:
         raise ValueError("Please select a type from: [CDF, survival, hazard, cumulative hazard]")
 
-    if isinstance(variable, pd.Series) or variable.shape[1] == 1:
-        overall_target = variable.sort_values()
+    if single_variable:
+        # single variable
+        overall_target = np.sort(variable)  # variable.sort_values()
         x = overall_target
         if degree > 0:
-            # TODO: check if target can be an pd.series/np.ndarray
             CDF = LPM_ratio(degree=degree, target=overall_target, variable=variable)
         else:
             # TODO: ecdf function
-            cdf_fun = ecdf(x)
+            cdf_fun = Internal_Functions.ecdf_function(x)
             CDF = cdf_fun(overall_target)
 
-        values = pd.DataFrame({variable.name: variable.sort_values(), "CDF": CDF})
+        # if hasattr(variable, 'name'):
+        #    values = pd.DataFrame({variable.name: overall_target, "CDF": CDF})
+        # else:
+        #    values = pd.DataFrame({0: overall_target, "CDF": CDF})
+
         if target is not None:
             P = LPM_ratio(degree=degree, target=target, variable=variable)
         else:
             P = None
-
         ylabel = "Probability"
-
         if cdf_type == "survival":
             CDF = 1 - CDF
-            P = 1 - P
+            if P is not None:
+                P = 1 - P
         elif cdf_type == "hazard":
-            # TODO: R density function
-            CDF = np.exp(np.log(density(x, n=x.shaṕe[1])["y"]) - np.log(1 - CDF))
+            _density = Internal_Functions.density_kde(x)
+            # CDF <- exp(log(density(x, n = length(x))$y)-log(1-CDF))
+            CDF = np.exp(np.log(_density[1]) - np.log(1 - CDF))
             ylabel = "h(x)"
+            # TODO
             P = NNS_reg(
                 x[-x.shape[1]],
                 CDF[-x.shape[1]],
                 order="max",
-                point_est=c(x[x.shape[1]], target),
+                point_est=[x[x.shape[1]], target],
                 plot=False,
             )["Point.est"]
             CDF[np.isinf(CDF)] = P[1]
@@ -876,80 +896,108 @@ def NNS_CDF(
         elif cdf_type == "cumulative hazard":
             CDF = -np.log((1 - CDF))
             ylabel = "H(x)"
+            # TODO
             P = NNS_reg(
                 x[-x.shape[1]],
                 CDF[-x.shape[1]],
                 order="max",
-                point_est=c(x[x.shape[1]], target),
+                point_est=[x[x.shape[1]], target],
                 plot=False,
             )["Point.est"]
             CDF[np.isinf(CDF)] = P[1]
             P = P[-1]
         if plot:
-            # TODO matplotlib like:
-            pass
-            if False:
-                plot(
-                    x,
-                    CDF,
-                    pch=19,
-                    col="steelblue",
-                    xlab=deparse(substitute(variable)),
-                    ylab=ylabel,
-                    main=toupper(type),
-                    type="s",
-                    lwd=2,
-                )
-                points(x, CDF, pch=19, col="steelblue")
-                lines(x, CDF, lty=2, col="steelblue")
-                if target is not None:
-                    segments(target, 0, target, P, col="red", lwd=2, lty=2)
-                    segments(min(variable), P, target, P, col="red", lwd=2, lty=2)
-                    points(target, P, col="green", pch=19)
-                    mtext(text=round(P, 4), col="red", side=2, at=P, las=2)
-                    mtext(text=round(target, 4), col="red", side=1, at=target, las=1)
-        values = pd.DataFrame({variable.name: x, ylabel: CDF})
+            plt.title(_type.upper())
+            plt.xlabel(variable.name if hasattr(variable, "name") else "X")
+            plt.ylabel(ylabel)
+            plt.step(x, CDF, color="steelblue", linewidth=2, marker=".", where="post")
+            plt.plot(x, CDF, color="steelblue", linestyle=":")
+            # plot(
+            #    x,
+            #    CDF,
+            #    pch=19,
+            #    col="steelblue",
+            #    xlab=deparse(substitute(variable)),
+            #    ylab=ylabel,
+            #    main=toupper(_type),
+            #    type="s",
+            #    lwd=2,
+            # )
+            # points(x, CDF, pch=19, col="steelblue")
+            # lines(x, CDF, lty=2, col="steelblue")
+            if target is not None:
+                min_var = np.min(variable)
+                min_p = np.min(P)
+                # segments(target, 0, target, P, col="red", lwd=2, lty=2)
+                # segments(min(variable), P, target, P, col="red", lwd=2, lty=2)
+                # points(target, P, col="green", pch=19)
+                # mtext(text=round(P, 4), col="red", side=2, at=P, las=2)
+                # mtext(text=round(target, 4), col="red", side=1, at=target, las=1)
+                for i, t in enumerate(target):
+                    plt.plot([t, t], [0, P[i]], linestyle="--", linewidth=2, color="red")
+                    plt.plot([min_var, t], [P[i], P[i]], linestyle="--", linewidth=2, color="red")
+                    plt.text(min_var, P[i], f"{P[i]:.4f}", color="red")
+                    plt.text(t, min_p, f"{t:.4f}", color="red", rotation=90)
+                    # plt.text(t, P[i], f"({t:.4f}, {P[i]:.4f})", color='red')
+                plt.scatter(target, P, color="lightgreen")
+
+                # plt.xticks(list(plt.xticks()[0]) + list(target))
+                # plt.yticks(list(plt.yticks()[0]) + list(P))
+
+        if hasattr(variable, "name"):
+            values = pd.DataFrame({variable.name: x, ylabel: CDF})
+        else:
+            values = pd.DataFrame({0: x, ylabel: CDF})
         return {"Function": values, "target.value": P}
     else:
-        overall_target_1 = variable[:, 1]
-        overall_target_2 = variable[:, 2]
+        if isinstance(variable, pd.DataFrame):
+            # pandas
+            overall_target_1 = variable.values[:, 0]
+            overall_target_2 = variable.values[:, 1]
+            x_sorted = np.sort(variable.values[:, 0])
+            y_sorted = np.sort(variable.values[:, 1])
+        else:
+            overall_target_1 = variable[:, 0]
+            overall_target_2 = variable[:, 1]
+            x_sorted = np.sort(variable[:, 0])
+            y_sorted = np.sort(variable[:, 1])
         CDF = Co_LPM(
             degree_x=degree,
             degree_y=degree,
-            x=variable[:, 1].sort_values(),
-            y=variable[:, 2].sort_values(),
+            x=x_sorted,
+            y=y_sorted,
             target_x=overall_target_1,
             target_y=overall_target_2,
         ) / (
             Co_LPM(
                 degree_x=degree,
                 degree_y=degree,
-                x=variable[:, 1].sort_values(),
-                y=variable[:, 2].sort_values(),
+                x=x_sorted,
+                y=y_sorted,
                 target_x=overall_target_1,
                 target_y=overall_target_2,
             )
             + Co_UPM(
                 degree_x=degree,
                 degree_y=degree,
-                x=variable[:, 1].sort_values(),
-                y=variable[:, 2].sort_values(),
+                x=x_sorted,
+                y=y_sorted,
                 target_x=overall_target_1,
                 target_y=overall_target_2,
             )
             + D_UPM(
                 degree_x=degree,
                 degree_y=degree,
-                x=variable[:, 1].sort_values(),
-                y=variable[:, 2].sort_values(),
+                x=x_sorted,
+                y=y_sorted,
                 target_x=overall_target_1,
                 target_y=overall_target_2,
             )
             + D_LPM(
                 degree_x=degree,
                 degree_y=degree,
-                x=variable[:, 1].sort_values(),
-                y=variable[:, 2].sort_values(),
+                x=x_sorted,
+                y=y_sorted,
                 target_x=overall_target_1,
                 target_y=overall_target_2,
             )
@@ -957,97 +1005,144 @@ def NNS_CDF(
         if cdf_type == "survival":
             CDF = 1 - CDF
         elif cdf_type == "hazard":
-            CDF = variable.sort_values() / (1 - CDF)
+            CDF = Internal_Functions.alt_cbind(np.sort(variable.reshape(-1)), 1 - CDF)
+            CDF = (CDF[0] / CDF[1]).values[0 : len(overall_target_2)]
+            # np.sort(variable.reshape(-1)) / (1 - CDF)
         elif cdf_type == "cumulative hazard":
             CDF = -np.log(1 - CDF)
         if target is not None:
-            P = Co_LPM(
+            up = Co_LPM(
                 degree_x=degree,
                 degree_y=degree,
-                x=variable[:, 1],
-                y=variable[:, 2],
-                target_x=target[1],
-                target_y=target[2],
-            ) / (
+                x=overall_target_1,
+                y=overall_target_2,
+                target_x=target[:, 0],
+                target_y=target[:, 1],
+            )
+            down = (
                 Co_LPM(
                     degree_x=degree,
                     degree_y=degree,
-                    x=variable[:, 1],
-                    y=variable[:, 2],
-                    target_x=target[1],
-                    target_y=target[2],
+                    x=overall_target_1,
+                    y=overall_target_2,
+                    target_x=target[:, 0],
+                    target_y=target[:, 1],
                 )
                 + Co_UPM(
                     degree_x=degree,
                     degree_y=degree,
-                    x=variable[:, 1],
-                    y=variable[:, 2],
-                    target_x=target[1],
-                    target_y=target[2],
+                    x=overall_target_1,
+                    y=overall_target_2,
+                    target_x=target[:, 0],
+                    target_y=target[:, 1],
                 )
                 + D_LPM(
                     degree_x=degree,
                     degree_y=degree,
-                    x=variable[:, 1],
-                    y=variable[:, 2],
-                    target_x=target[1],
-                    target_y=target[2],
+                    x=overall_target_1,
+                    y=overall_target_2,
+                    target_x=target[:, 0],
+                    target_y=target[:, 1],
                 )
                 + D_UPM(
                     degree_x=degree,
                     degree_y=degree,
-                    x=variable[:, 1],
-                    y=variable[:, 2],
-                    target_x=target[1],
-                    target_y=target[2],
+                    x=overall_target_1,
+                    y=overall_target_2,
+                    target_x=target[:, 0],
+                    target_y=target[:, 1],
                 )
             )
+            P = up / down
         else:
             P = None
 
         if plot:
-            # TODO: Matplotlib like
-            pass
-            if False:
-                plot3d(
-                    variable[:, 1],
-                    variable[:, 2],
-                    CDF,
-                    col="steelblue",
-                    xlab=variable[:, 1].name,
-                    ylab=variable[:, 2].name,
-                    zlab="Probability",
-                    box=False,
-                    pch=19,
-                )
-                if target is not None:
-                    points3d(target[1], target[2], P, col="green", pch=19)
-                    points3d(target[1], target[2], 0, col="red", pch=15, cex=2)
-                    lines3d(
-                        x=c(target[1], variable[:, 1].max()),
-                        y=c(target[2], variable[:, 2].max()),
-                        z=c(P, P),
-                        col="red",
-                        lwd=2,
-                        lty=3,
+            fig = plt.figure(figsize=(4, 4))
+            ax = fig.add_subplot(111, projection="3d")
+            plt.title(_type.upper())
+            ax.scatter(
+                overall_target_1,
+                overall_target_2,
+                zs=CDF,
+                color="steelblue",
+                marker="o",
+            )
+            ax.set_xlabel("X" if not hasattr(variable, "columns") else variable.columns[0])
+            ax.set_ylabel("Y" if not hasattr(variable, "columns") else variable.columns[1])
+            ax.set_zlabel("Probability")
+
+            # plot3d(
+            #    variable[:, 1],
+            #    variable[:, 2],
+            #    CDF,
+            #    col="steelblue",
+            #    xlab=variable[:, 1].name,
+            #    ylab=variable[:, 2].name,
+            #    zlab="Probability",
+            #    box=False,
+            #    pch=19,
+            # )
+            if target is not None:
+                ax.scatter(target[:, 0], target[:, 1], zs=P, color="lightgreen")
+                ax.scatter(target[:, 0], target[:, 1], zs=np.zeros(target.shape[0]), color="red")
+                # points3d(target[1], target[2], P, col="green", pch=19)
+                # points3d(target[1], target[2], 0, col="red", pch=15, cex=2)
+                for P_i in P:
+                    ax.plot(
+                        [target[0, 0], np.max(overall_target_1)],
+                        [target[0, 1], np.max(overall_target_2)],
+                        zs=[P_i, P_i],
+                        color="red",
+                        linewidth="2",
                     )
-                    lines3d(
-                        x=c(target[1], target[1]),
-                        y=c(target[2], target[2]),
-                        z=c(0, P),
-                        col="red",
-                        lwd=1,
-                        lty=3,
+                # lines3d(
+                #    x=c(target[1], variable[:, 1].max()),
+                #    y=c(target[2], variable[:, 2].max()),
+                #    z=c(P, P),
+                #    col="red",
+                #    lwd=2,
+                #    lty=3,
+                # )
+                for P_i in P:
+                    ax.plot(
+                        [target[0, 0], target[0, 0]],
+                        [target[0, 1], target[0, 1]],
+                        zs=[0, P_i],
+                        color="red",
+                        linewidth="2",
                     )
-                    text3d(
-                        variable[:, 1].max(),
-                        variable[:, 2].max(),
-                        P,
-                        texts=f"P = {round(P, 4)}",
-                        pos=4,
-                        col="red",
+                # lines3d(
+                #    x=c(target[1], target[1]),
+                #    y=c(target[2], target[2]),
+                #    z=c(0, P),
+                #    col="red",
+                #    lwd=1,
+                #    lty=3,
+                # )
+                for P_i in P:
+                    ax.text(
+                        np.max(overall_target_1),
+                        np.max(overall_target_2),
+                        P_i,
+                        f"P = {P_i:.4f}",
+                        color="red",
                     )
-    return {"CDF": pd.DataFrame({"variable": variable, "CDF": CDF}), "P": P}
+                # text3d(
+                #    variable[:, 1].max(),
+                #    variable[:, 2].max(),
+                #    P,
+                #    texts=f"P = {round(P, 4)}",
+                #    pos=4,
+                #    col="red",
+                # )
+        if not isinstance(variable, pd.DataFrame):
+            return {
+                "CDF": pd.concat([pd.DataFrame(variable), pd.Series(CDF, name="CDF")], axis=1),
+                "P": P,
+            }
+        else:
+            return {"CDF": pd.concat([variable, pd.Series(CDF, name="CDF")], axis=1), "P": P}
 
 
 __all__ = [
@@ -1062,5 +1157,5 @@ __all__ = [
     "LPM_ratio",
     "UPM_ratio",
     # "NNS_PDF", # TODO
-    # "NNS_CDF", # TODO
+    "NNS_CDF",  # TODO: partial
 ]

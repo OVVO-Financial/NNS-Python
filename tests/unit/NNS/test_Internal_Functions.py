@@ -25,6 +25,14 @@ class TestInternalFunctions(unittest.TestCase):
             for i in range(len(x)):
                 self.assertAlmostEqual(x[i], y[i], places)
 
+    def test_ecdf(self):
+        # ecdf(x: [pd.Series, np.ndarray, list, int, float], _xs=None, _ys=None):
+        x = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
+        f = NNS.Internal_Functions.ecdf_function(x)
+        self.assertAlmostEqualArray(
+            f([0, 1, 2, 3, 4, 5, 6, 2.5]), [0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.0, 0.4]
+        )
+
     def test_bw_nrd0(self):
         nt = namedtuple("Test", "dataset")
         x = nt(dataset=self.load_default_data()["x"].values)

@@ -1,9 +1,64 @@
 # -*- coding: utf-8 -*-
+from typing import Callable, Tuple
+import functools
 import pandas as pd
 import numpy as np
 import scipy
 import scipy.stats
 import KDEpy
+import numba
+
+
+@numba.jit(nopython=True, nogil=True)
+def _ecdf_numba(x: [float, int], _xs: [np.ndarray, list], _ys: [np.ndarray, list]) -> float:
+    s = len(_xs)
+    if s == 0 or x < _xs[0]:
+        return 0.0
+    elif x >= _xs[-1]:
+        return 1.0
+    for i in range(1, s):
+        if _xs[i] > x:
+            return _ys[i - 1]
+            # prop_diff_x = (x-_xs[i-1]) / (_xs[i]-_xs[i-1])
+            # return (
+            #    _ys[i - 1] +
+            #    (prop_diff_x * (_ys[i]-_ys[i-1]))
+            # )
+    return _ys[-1]
+
+
+@numba.jit(nopython=True, nogil=True)
+def _ecdf_numba_vec(x: np.ndarray, _xs: [np.ndarray, list], _ys: [np.ndarray, list]) -> np.ndarray:
+    s = x.shape[0]
+    ret = np.zeros(s, dtype=np.float64)
+    for i in numba.prange(s):
+        ret[i] = _ecdf_numba(x[i], _xs, _ys)
+    return ret
+
+
+def ecdf(
+    x: [pd.Series, np.ndarray, list, int, float], _xs: [list, np.ndarray], _ys: [list, np.ndarray]
+):
+    if isinstance(x, pd.Series):
+        return _ecdf_numba_vec(x.values, _xs, _ys)
+    elif isinstance(x, list):
+        return _ecdf_numba_vec(np.array(x), _xs, _ys)
+    elif hasattr(x, "__len__"):
+        return _ecdf_numba_vec(x, _xs, _ys)
+    return _ecdf_numba(x, _xs, _ys)
+
+
+def ecdf_values(x):
+    # https://stackoverflow.com/a/37660583/2559936
+    xs = np.sort(x)
+    ys = np.arange(1, len(xs) + 1) / float(len(xs))
+    return xs, ys
+
+
+def ecdf_function(x: [list, pd.Series, np.ndarray]) -> Callable:
+    _xs, _ys = ecdf_values(x)
+    _func = functools.partial(ecdf, _xs=_xs, _ys=_ys)
+    return _func
 
 
 def fivenum(v: [pd.Series, np.ndarray]) -> list:
@@ -47,6 +102,13 @@ def bw_nrd0(x: [scipy.stats.kde.gaussian_kde, np.ndarray, pd.Series]):
     return bw
 
 
+def density_kde(x: [pd.Series, np.ndarray]) -> [np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+    if isinstance(x, pd.Series):
+        return KDEpy.FFTKDE(kernel="gaussian", bw=bw_nrd0(x.values)).fit(x.values).evaluate()
+    else:
+        return KDEpy.FFTKDE(kernel="gaussian", bw=bw_nrd0(x)).fit(x).evaluate()
+
+
 def mode(x: [pd.Series, np.ndarray]) -> float:
     """Continuous Mode of a distribution"""
 
@@ -72,10 +134,7 @@ def mode(x: [pd.Series, np.ndarray]) -> float:
     if (
         True
     ):  # TODO Check if KDEpy exists, if not use the old scipy.stats.gaussian_kde (with bad outputs btw)
-        if isinstance(x, pd.Series):
-            a, b = KDEpy.FFTKDE(kernel="gaussian", bw=bw_nrd0(x.values)).fit(x.values).evaluate()
-        else:
-            a, b = KDEpy.FFTKDE(kernel="gaussian", bw=bw_nrd0(x)).fit(x).evaluate()
+        a, b = density_kde(x)
         mode_value = a[np.argmax(b)]
     elif (
         False
@@ -377,4 +436,7 @@ __all__ = [
     "RP",
     "NNS_meboot_part",
     "NNS_meboot_expand_sd",
+    "ecdf",
+    "ecdf_values",
+    "density_kde",
 ]
