@@ -638,7 +638,7 @@ def PM_matrix(
 
     if pop_adj:
         # adjustment <- length(variable[ , 1]) / (length(variable[ , 1]) - 1)
-        adjustment = variable.shape[1] / (variable.shape[1] - 1)
+        adjustment = variable.shape[0] / (variable.shape[0] - 1)
         clpm_matrix *= adjustment
         cupm_matrix *= adjustment
         dlpm_matrix *= adjustment

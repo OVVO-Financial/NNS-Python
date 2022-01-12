@@ -622,6 +622,31 @@ class TestPartialMoments(unittest.TestCase):
             [2.150991e-02, 1.045718e-04, 3.685723e-02, 7.789023e-04, 5.293443e-04, 3.938325e-06],
         )
 
+    def test_PM_matrix_small(self):
+        #      x y
+        # [1,] 1 2
+        # [2,] 1 2
+        # [3,] 3 3
+        Test = np.column_stack([np.array([1.0, 1.0, 3.0]), np.array([2.0, 2.0, 3.0])])
+        # > NNS::PM.matrix(1,1,"mean", do.call(cbind, A), pop.adj = TRUE)$cov.matrix
+        #  x         y
+        # x 1.3333333 0.6666667
+        # y 0.6666667 0.3333333
+        ret_A = np.column_stack(
+            [np.array([1.3333333, 0.6666667]), np.array([0.6666667, 0.3333333])]
+        )
+        # > NNS::PM.matrix(1,1,"mean", do.call(cbind, A), pop.adj = FALSE)$cov.matrix
+        #  x         y
+        # x 0.8888889 0.4444444
+        # y 0.4444444 0.2222222
+        ret_B = np.column_stack(
+            [np.array([0.8888889, 0.4444444]), np.array([0.4444444, 0.2222222])]
+        )
+        a = NNS.PM_matrix(1, 1, "mean", Test, pop_adj=True)["cov.matrix"]
+        b = NNS.PM_matrix(1, 1, "mean", Test, pop_adj=False)["cov.matrix"]
+        np.testing.assert_almost_equal(a.values, ret_A)
+        np.testing.assert_almost_equal(b.values, ret_B)
+
     def test_PM_matrix_csv(self):
         df = pd.read_csv("pm_matrix_test.csv")
         df = df[["x", "y", "z"]]
