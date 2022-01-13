@@ -1,9 +1,14 @@
 # NNS-Python
 Nonlinear Nonparametric Statistics
 
-From Beta R Version of 2021-12-13 (Version: 8.4-Beta, Date: 2021-12-13) 
 
-Implemented Functions:
+## Install
+
+    pip install nns
+    
+
+## Implemented Functions:
+From Beta R Version of 2021-12-13 (Version: 8.4-Beta, Date: 2021-12-13) 
 
 * ANOVA
     * NNS.ANOVA: TODO (deps: NNS.ANOVA.bin)
