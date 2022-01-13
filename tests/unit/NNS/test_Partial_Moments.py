@@ -622,6 +622,50 @@ class TestPartialMoments(unittest.TestCase):
             [2.150991e-02, 1.045718e-04, 3.685723e-02, 7.789023e-04, 5.293443e-04, 3.938325e-06],
         )
 
+    def test_PM_matrix_cov_pop_adj(self):
+        #      x y
+        # [1,] 1 2
+        # [2,] 1 2
+        # [3,] 3 3
+        Test = np.column_stack([np.array([1.0, 1.0, 3.0]), np.array([2.0, 2.0, 3.0])])
+        # > NNS::PM.matrix(1,1,"mean", do.call(cbind, A), pop.adj = TRUE)$cov.matrix
+        #  x         y
+        # x 1.3333333 0.6666667
+        # y 0.6666667 0.3333333
+        ret_A = np.column_stack(
+            [np.array([1.3333333, 0.6666667]), np.array([0.6666667, 0.3333333])]
+        )
+        # > NNS::PM.matrix(1,1,"mean", do.call(cbind, A), pop.adj = FALSE)$cov.matrix
+        #  x         y
+        # x 0.8888889 0.4444444
+        # y 0.4444444 0.2222222
+        ret_B = np.column_stack(
+            [np.array([0.8888889, 0.4444444]), np.array([0.4444444, 0.2222222])]
+        )
+        a = NNS.PM_matrix(1, 1, "mean", Test, pop_adj=True)["cov.matrix"]
+        b = NNS.PM_matrix(1, 1, "mean", Test, pop_adj=False)["cov.matrix"]
+        np.testing.assert_almost_equal(a.values, ret_A)
+        np.testing.assert_almost_equal(b.values, ret_B)
+        np.testing.assert_almost_equal(a.values, np.cov(Test.T, ddof=1))
+        np.testing.assert_almost_equal(b.values, np.cov(Test.T, ddof=0))
+
+    def test_PM_matrix_csv(self):
+        df = pd.read_csv("pm_matrix_test.csv")
+        df = df[["x", "y", "z"]]
+        df_np = df.values
+        # pandas
+        ret1 = NNS.PM_matrix(LPM_degree=1, UPM_degree=1, target="mean", variable=df)
+        ret2 = NNS.PM_matrix(LPM_degree=1, UPM_degree=1, target="mean", variable=df, pop_adj=True)
+        np.testing.assert_almost_equal(ret1["cov.matrix"].values, np.cov(df.T, ddof=0))
+        np.testing.assert_almost_equal(ret2["cov.matrix"].values, np.cov(df.T, ddof=1))
+        # numpy
+        ret1 = NNS.PM_matrix(LPM_degree=1, UPM_degree=1, target="mean", variable=df_np)
+        ret2 = NNS.PM_matrix(
+            LPM_degree=1, UPM_degree=1, target="mean", variable=df_np, pop_adj=True
+        )
+        np.testing.assert_almost_equal(ret1["cov.matrix"].values, np.cov(df.T, ddof=0))
+        np.testing.assert_almost_equal(ret2["cov.matrix"].values, np.cov(df.T, ddof=1))
+
     def test_PM_matrix(self):
         z = self.load_default_data()
         for i in [True, False]:
@@ -723,8 +767,225 @@ class TestPartialMoments(unittest.TestCase):
     def test_NNS_PDF(self):
         print("TODO: Implement NNS_PDF")  # TODO
 
-    def test_NNS_CDF(self):
-        print("TODO: Implement NNS_CDF")  # TODO
+    def test_NNS_CDF_plot(self):
+        import matplotlib.pyplot as plt
+
+        x = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 2.5]
+        if True:
+            NNS.NNS_CDF(x, degree=3, target=[1.5, 2.5, 3.5], plot=True)
+            plt.close()
+        if True:
+            y = np.array(x) ** 2
+            XY = np.column_stack([x, y])
+            XY_target = np.column_stack([np.array([1, 2]), np.array([5, 10])])
+            NNS.NNS_CDF(XY, degree=3, target=XY_target, plot=True)
+            plt.close()
+            NNS.NNS_CDF(XY, degree=3, type="survival", target=XY_target, plot=True)
+            plt.close()
+            NNS.NNS_CDF(XY, degree=3, type="hazard", target=XY_target, plot=True)
+            plt.close()
+            NNS.NNS_CDF(XY, degree=3, type="cumulative hazard", target=XY_target, plot=True)
+            plt.close()
+
+    def test_NNS_CDF_cdf(self):
+        x = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 2.5]
+        ret = NNS.NNS_CDF(x)
+        ret_1 = [1, 1, 2, 2, 2.5, 3, 3, 4, 4, 5, 5]
+        ret_2 = [
+            0.1818182,
+            0.1818182,
+            0.3636364,
+            0.3636364,
+            0.4545455,
+            0.6363636,
+            0.6363636,
+            0.8181818,
+            0.8181818,
+            1.0,
+            1.0,
+        ]
+        ret_3 = [
+            0.0,
+            0.0,
+            0.02698145,
+            0.02698145,
+            0.15469613,
+            0.50173010,
+            0.50173010,
+            0.97415186,
+            0.97415186,
+            1.0,
+            1.0,
+        ]
+        self.assertIsNone(ret["target.value"])
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_2)
+        # target
+        ret = NNS.NNS_CDF(x, target=3.5)
+        self.assertAlmostEqual(ret["target.value"], 0.6363636)
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_2)
+        # target
+        ret = NNS.NNS_CDF(x, target=[1.5, 2.5, 3.5])
+        self.assertAlmostEqualArray(ret["target.value"], [0.1818182, 0.4545455, 0.6363636])
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_2)
+        # target
+        ret = NNS.NNS_CDF(x, target=[1.5, 2.5, 3.5], degree=3)
+        self.assertAlmostEqualArray(ret["target.value"], [0.001996008, 0.154696133, 0.848648649])
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_3)
+
+    def test_NNS_CDF_survival(self):
+        x = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 2.5]
+        ret = NNS.NNS_CDF(x, type="survival")
+        ret_1 = [1, 1, 2, 2, 2.5, 3, 3, 4, 4, 5, 5]
+        ret_2 = [
+            0.8181818,
+            0.8181818,
+            0.6363636,
+            0.6363636,
+            0.5454545,
+            0.3636364,
+            0.3636364,
+            0.1818182,
+            0.1818182,
+            0.0,
+            0.0,
+        ]
+        ret_3 = [
+            1.0,
+            1.0,
+            0.97301855,
+            0.97301855,
+            0.84530387,
+            0.49826990,
+            0.49826990,
+            0.02584814,
+            0.02584814,
+            0.0,
+            0.0,
+        ]
+        self.assertIsNone(ret["target.value"])
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_2)
+        # target
+        ret = NNS.NNS_CDF(x, target=3.5, type="survival")
+        self.assertAlmostEqual(ret["target.value"], 0.3636364)
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_2)
+        # target
+        ret = NNS.NNS_CDF(x, target=[1.5, 2.5, 3.5], type="survival")
+        self.assertAlmostEqualArray(ret["target.value"], [0.8181818, 0.5454545, 0.3636364])
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_2)
+        # target
+        ret = NNS.NNS_CDF(x, target=[1.5, 2.5, 3.5], degree=3, type="survival")
+        self.assertAlmostEqualArray(ret["target.value"], [0.9980040, 0.8453039, 0.1513514])
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_3)
+
+    def test_NNS_CDF_hazard(self):
+        # TODO
+        return
+        x = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 2.5]
+        ret = NNS.NNS_CDF(x, type="hazard")
+        ret_1 = [1, 1, 2, 2, 2.5, 3, 3, 4, 4, 5, 5]
+        ret_2 = [
+            0.8181818,
+            0.8181818,
+            0.6363636,
+            0.6363636,
+            0.5454545,
+            0.3636364,
+            0.3636364,
+            0.1818182,
+            0.1818182,
+            0.0,
+            0.0,
+        ]
+        ret_3 = [
+            1.0,
+            1.0,
+            0.97301855,
+            0.97301855,
+            0.84530387,
+            0.49826990,
+            0.49826990,
+            0.02584814,
+            0.02584814,
+            0.0,
+            0.0,
+        ]
+        self.assertIsNone(ret["target.value"])
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_2)
+        # target
+        ret = NNS.NNS_CDF(x, target=3.5, type="hazard")
+        self.assertAlmostEqual(ret["target.value"], 0.3636364)
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_2)
+        # target
+        ret = NNS.NNS_CDF(x, target=[1.5, 2.5, 3.5], type="hazard")
+        self.assertAlmostEqualArray(ret["target.value"], [0.8181818, 0.5454545, 0.3636364])
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_2)
+        # target
+        ret = NNS.NNS_CDF(x, target=[1.5, 2.5, 3.5], degree=3, type="hazard")
+        self.assertAlmostEqualArray(ret["target.value"], [0.9980040, 0.8453039, 0.1513514])
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_3)
+
+    def test_NNS_CDF_cumulative_hazard(self):
+        # TODO
+        return
+        x = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 2.5]
+        ret = NNS.NNS_CDF(x, type="cumulative hazard")
+        ret_1 = [1, 1, 2, 2, 2.5, 3, 3, 4, 4, 5, 5]
+        ret_2 = [
+            0.8181818,
+            0.8181818,
+            0.6363636,
+            0.6363636,
+            0.5454545,
+            0.3636364,
+            0.3636364,
+            0.1818182,
+            0.1818182,
+            0.0,
+            0.0,
+        ]
+        ret_3 = [
+            1.0,
+            1.0,
+            0.97301855,
+            0.97301855,
+            0.84530387,
+            0.49826990,
+            0.49826990,
+            0.02584814,
+            0.02584814,
+            0.0,
+            0.0,
+        ]
+        self.assertIsNone(ret["target.value"])
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_2)
+        # target
+        ret = NNS.NNS_CDF(x, target=3.5, type="cumulative hazard")
+        self.assertAlmostEqual(ret["target.value"], 0.3636364)
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_2)
+        # target
+        ret = NNS.NNS_CDF(x, target=[1.5, 2.5, 3.5], type="cumulative hazard")
+        self.assertAlmostEqualArray(ret["target.value"], [0.8181818, 0.5454545, 0.3636364])
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_2)
+        # target
+        ret = NNS.NNS_CDF(x, target=[1.5, 2.5, 3.5], degree=3, type="cumulative hazard")
+        self.assertAlmostEqualArray(ret["target.value"], [0.9980040, 0.8453039, 0.1513514])
+        self.assertAlmostEqualArray(ret["Function"][0], ret_1)
+        self.assertAlmostEqualArray(ret["Function"]["Probability"], ret_3)
 
     def load_default_PM_matrix_ret(self):
         return {
