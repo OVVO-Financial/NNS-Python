@@ -31,6 +31,6 @@ jobs:
         python -m isort --multi-line=3 --trailing-comma --force-grid-wrap=0 --combine-as --line-width 100 --interactive NNS/ tests/ --check
     - name: Test
       run: |
-        python -m pip install --no-cache-dir --user -e .NNS/
+        python -m pip install --no-cache-dir --user -e .
         python -m pip install --no-cache-dir --user -e .[test]
         python -m pytest --cache-clear --cov=NNS --cov-report term-missing --cov-fail-under=70 ./tests/
