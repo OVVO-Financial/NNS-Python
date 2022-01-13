@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
 from .Partial_Moments import LPM
+
 
 # TODO: TEST / implement matplotlib graph
 def NNS_TSD(x: pd.Series, y: pd.Series, use_plot: bool = True) -> str:

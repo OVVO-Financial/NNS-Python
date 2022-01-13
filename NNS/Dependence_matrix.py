@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 
+
 def NNS_dep_matrix(x: [np.ndarray, pd.Series], order=None, degree=None, asym: bool=False):
     if len(x.shape) == 1:
         raise Exception("supply both 'x' and 'y' or a matrix-like 'x'")

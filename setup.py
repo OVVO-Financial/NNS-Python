@@ -13,7 +13,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 # Fields marked as "Optional" may be commented out.
 setup(
     name="NNS",
-    version="0.1.11",
+    version="0.1.12",
     description="Nonlinear nonparametric statistics using partial moments",
     long_description=long_description,
     long_description_content_type="text/markdown",  # Optional (see note above)
@@ -32,6 +32,9 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate you support Python 3. These classifiers are *not*
         # checked by 'pip install'. See instead 'python_requires' below.
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.7",
     ],
     keywords="Nonlinear nonparametric regression classification clustering",
@@ -61,18 +64,20 @@ setup(
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        "numpy>=1.19.0",
-        "pandas>=1.0.5",
-        "scikit_learn>=0.23.1",
+        "pandas>=1.1.3",
+        "numpy>=1.19.2",
+        "scipy>=1.5.2",
+        "numba>=0.51.2",
+        "setuptools>=54.2.0",
+        "matplotlib>=3.3.2",
         "KDEpy>=1.1.0",
-        "numba"
     ],
     extras_require={
-        "test": ["pytest-cov==2.10.0", "pytest==5.4.3"],
+        "test": ["pytest-cov>=2.10.0", "pytest>=5.4.3"],
     },
     url="https://github.com/OVVO-Financial/NNS-Python/",
     # https://medium.com/@joel.barmettler/how-to-upload-your-python-package-to-pypi-65edc5fe9c56
     # build:  python setup.py sdist
     # upload: twine upload dist/*
-    download_url="https://github.com/OVVO-Financial/NNS-Python/archive/refs/tags/v_0111.tar.gz",
+    download_url="https://github.com/OVVO-Financial/NNS-Python/archive/refs/tags/v_0112.tar.gz",
 )

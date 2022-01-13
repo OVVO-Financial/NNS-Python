@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-import pandas as pd
-import numpy as np
-from .Partial_Moments import LPM_ratio
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+from .Partial_Moments import LPM_ratio
+
 
 # TODO: test / matplotlib
 def NNS_FSD(x: pd.Series, y: pd.Series, type_cdf: str = "discrete", use_plot: bool = True) -> str:

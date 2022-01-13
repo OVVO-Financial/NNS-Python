@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
 from .Partial_Moments import LPM
+
 
 # TODO: test / matplotlib graph
 def NNS_SSD(x: pd.Series, y: pd.Series, use_plot: bool = True) -> str:
