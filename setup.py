@@ -65,6 +65,7 @@ setup(
         "pandas>=1.0.5",
         "scikit_learn>=0.23.1",
         "KDEpy>=1.1.0",
+        "numba"
     ],
     extras_require={
         "test": ["pytest-cov==2.10.0", "pytest==5.4.3"],
