@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import Internal_Functions
+from . import Internal_Functions
 from .Binary_ANOVA import NNS_ANOVA_bin
 from .Copula import NNS_copula
 from .FSD import NNS_FSD
