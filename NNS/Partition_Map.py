@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 
+
 def NNS_part(
     x: [np.ndarray, pd.Series], y: [np.ndarray, pd.Series],
     Voronoi: bool=False,

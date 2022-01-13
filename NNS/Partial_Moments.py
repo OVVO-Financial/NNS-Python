@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
+import matplotlib.pyplot as plt
+import numba
 import numpy as np
 import pandas as pd
-import numba
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
 from . import Internal_Functions
 
 

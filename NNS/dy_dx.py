@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 
+
 # TODO TEST dydx
 def dy_dx(x: pd.Series, y: pd.Series, eval_point: [float, int, str, None] = None, deriv_method: str = "FD") -> dict:
     r"""

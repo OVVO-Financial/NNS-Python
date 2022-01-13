@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-import pandas as pd
 import numpy as np
-from .Partial_Moments import LPM_ratio
+import pandas as pd
 import scipy.optimize
+
+from .Partial_Moments import LPM_ratio
 
 
 def _LPM_VaR(

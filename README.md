@@ -4,7 +4,7 @@ Nonlinear Nonparametric Statistics
 
 ## Install
 
-    pip install nns
+    pip install NNS
     
 
 ## Implemented Functions:

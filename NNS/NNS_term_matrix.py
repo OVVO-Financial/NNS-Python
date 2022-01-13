@@ -38,8 +38,8 @@ def NNS_term_matrix(x: pd.DataFrame, oos: [None, pd.Series] = None, names: bool 
     def count_unique(x1) -> list:
         return [x1.count(ii) for ii in unique_vocab]
 
-    p = 0 if oos is None else len(oos)
-    n = len(x)
+    0 if oos is None else len(oos)
+    len(x)
     # Remove commas, etc.
     x.iloc[:, 0] = x.iloc[:, 0].astype(str)
     for i in [",", ";", ":", "'s", " . "]:

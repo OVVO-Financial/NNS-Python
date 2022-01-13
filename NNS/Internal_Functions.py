@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-from typing import Callable, Tuple
 import functools
-import pandas as pd
-import numpy as np
-import scipy
-import scipy.stats
+from typing import Callable, Tuple
+
 import KDEpy
 import numba
+import numpy as np
+import pandas as pd
+import scipy
+import scipy.stats
 
 
 @numba.jit(nopython=True, nogil=True)

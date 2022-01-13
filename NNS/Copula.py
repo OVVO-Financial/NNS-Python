@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
 from .Partial_Moments import PM_matrix
 
 _tmp = Axes3D, Poly3DCollection  # just o avoid import lint errors

@@ -2,9 +2,10 @@
 import unittest
 from collections import namedtuple
 
+import numpy as np
 import pandas as pd
 import pandas.util.testing as pd_test
-import numpy as np
+
 import NNS.Internal_Functions
 
 

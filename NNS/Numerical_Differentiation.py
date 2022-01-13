@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-import numpy as np
 from typing import Callable
-import scipy.optimize
+
+import numpy as np
 import scipy.linalg
+import scipy.optimize
 
 
 def NNS_diff(
@@ -59,10 +60,9 @@ def NNS_diff(
     f_x_h = f(point - h)
 
     ### Y = mX + B
-    Y = f_x
-    m = (f_x - f_x_h) / h
-    mX = ((f_x - f_x_h) / h) * point
-    B = f_x - ((f_x - f_x_h) / h) * point
+    (f_x - f_x_h) / h
+    ((f_x - f_x_h) / h) * point
+    f_x - ((f_x - f_x_h) / h) * point
     ### Initial interval for B given inputted h-step-value
 
     f_x_h_lower = f(point - h)
