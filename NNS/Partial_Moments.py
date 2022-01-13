@@ -13,7 +13,7 @@ def pd_fill_diagonal(df_matrix: pd.DataFrame, value) -> None:
     df_matrix.values[tuple([np.arange(n)] * 2)] = value
 
 
-@numba.jit(parallel=True, nopython=True)
+@numba.jit(parallel=True, nopython=True, nogil=True)
 def numba_LPM(degree: [int, float], target: np.ndarray, variable: np.ndarray) -> np.ndarray:
     ret = np.zeros(shape=(target.shape[0]), dtype=np.float32)
     for i in numba.prange(target.shape[0]):
@@ -84,7 +84,7 @@ def LPM(
     )[0]
 
 
-@numba.jit(parallel=True, nopython=True)
+@numba.jit(parallel=True, nopython=True, nogil=True)
 def numba_UPM(degree: [int, float], target: np.ndarray, variable: np.ndarray) -> np.ndarray:
     ret = np.zeros(shape=(target.shape[0]), dtype=np.float32)
     for i in numba.prange(target.shape[0]):
@@ -809,18 +809,19 @@ def NNS_CDF(
     )
 
     if target is not None:
-        if isinstance(target, list):
-            if isinstance(target[0], list):
-                target = np.column_stack([np.array(i) for i in target])
-            else:
-                target = np.column_stack(target)
-
         if single_variable:
+            if isinstance(target, list):
+                target = np.array(target)
             if np.any(target < np.min(variable)) or np.any(target > np.max(variable)):
                 raise ValueError(
                     "Please make sure target is within the observed values of variable."
                 )
         else:
+            if isinstance(target, list):
+                if isinstance(target[0], list):
+                    target = np.column_stack([np.array(i) for i in target])
+                else:
+                    target = np.column_stack(target)
             if isinstance(variable, pd.DataFrame):
                 # pandas, using .values[]
                 if np.any(target[:, 0] < np.min(variable.values[:, 0])) or np.any(
@@ -933,12 +934,20 @@ def NNS_CDF(
                 # points(target, P, col="green", pch=19)
                 # mtext(text=round(P, 4), col="red", side=2, at=P, las=2)
                 # mtext(text=round(target, 4), col="red", side=1, at=target, las=1)
-                for i, t in enumerate(target):
-                    plt.plot([t, t], [0, P[i]], linestyle="--", linewidth=2, color="red")
-                    plt.plot([min_var, t], [P[i], P[i]], linestyle="--", linewidth=2, color="red")
-                    plt.text(min_var, P[i], f"{P[i]:.4f}", color="red")
-                    plt.text(t, min_p, f"{t:.4f}", color="red", rotation=90)
-                    # plt.text(t, P[i], f"({t:.4f}, {P[i]:.4f})", color='red')
+                if not hasattr(target, "__len__"):
+                    plt.plot([target, target], [0, P], linestyle="--", linewidth=2, color="red")
+                    plt.plot([min_var, target], [P, P], linestyle="--", linewidth=2, color="red")
+                    plt.text(min_var, P, f"{P:.4f}", color="red")
+                    plt.text(target, min_p, f"{target:.4f}", color="red", rotation=90)
+                else:
+                    for i, t in enumerate(target):
+                        plt.plot([t, t], [0, P[i]], linestyle="--", linewidth=2, color="red")
+                        plt.plot(
+                            [min_var, t], [P[i], P[i]], linestyle="--", linewidth=2, color="red"
+                        )
+                        plt.text(min_var, P[i], f"{P[i]:.4f}", color="red")
+                        plt.text(t, min_p, f"{t:.4f}", color="red", rotation=90)
+                        # plt.text(t, P[i], f"({t:.4f}, {P[i]:.4f})", color='red')
                 plt.scatter(target, P, color="lightgreen")
 
                 # plt.xticks(list(plt.xticks()[0]) + list(target))
