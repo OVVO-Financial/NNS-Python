@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 import numpy as np
 import pandas as pd
 
@@ -76,7 +79,7 @@ def NNS_ANOVA_bin(
     pop_adjustment = ((len(control) + len(treatment) - 2) / (len(control) + len(treatment))) ** 2
 
     # Graphs
-    if plot:
+    if plot and plt is not None:
         plt.title("NNS ANOVA and Effect Side")
         plt.boxplot(
             [control, treatment],
@@ -112,7 +115,7 @@ def NNS_ANOVA_bin(
             CI = confidence_interval
         a = UPM_VaR(1 - CI, 1, control)
         b = np.mean(control)
-        if plot:
+        if plot and plt is not None:
             if tails in ["both", "right"]:
                 plt.axvline(max(a, b), color="green", linewidth=4, label="mu+", linestyle=":")
                 # abline(v = max(a, b), col = "green", lwd = 4, lty = 3)
@@ -123,7 +126,7 @@ def NNS_ANOVA_bin(
         c = LPM_VaR(1 - CI, 1, control)
         d = np.mean(control)
 
-        if plot:
+        if plot and plt is not None:
             if tails in ["both", "left"]:
                 plt.axvline(min(c, d), color="blue", linewidth=4, label="mu-", linestyle=":")
                 # abline(v = min(c, d), col = "blue", lwd = 4, lty = 3)

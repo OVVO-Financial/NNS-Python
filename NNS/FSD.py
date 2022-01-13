@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-import matplotlib.pyplot as plt
+
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 import numpy as np
 import pandas as pd
 
@@ -42,7 +46,7 @@ def NNS_FSD(x: pd.Series, y: pd.Series, type_cdf: str = "discrete", use_plot: bo
     x_fsd_y = np.any(LPM_x_sort > LPM_y_sort)
     y_fsd_x = np.any(LPM_y_sort > LPM_x_sort)
 
-    if use_plot:
+    if use_plot and plt is not None:
         plt.title("FSD")
         plt.ylabel("Area of Cumulative Distribution")
         plt.plot(Combined_sort, LPM_x_sort, label="<Combined Sort> vs <LPM X Sort>")

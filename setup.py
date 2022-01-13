@@ -69,12 +69,9 @@ setup(
         "scipy>=1.5.2",
         "numba>=0.51.2",
         "setuptools>=54.2.0",
-        "matplotlib>=3.3.2",
         "KDEpy>=1.1.0",
     ],
-    extras_require={
-        "test": ["pytest-cov>=2.10.0", "pytest>=5.4.3"],
-    },
+    extras_require={"test": ["pytest-cov>=2.10.0", "pytest>=5.4.3"], "plot": ["matplotlib>=3.3.2"]},
     url="https://github.com/OVVO-Financial/NNS-Python/",
     # https://medium.com/@joel.barmettler/how-to-upload-your-python-package-to-pypi-65edc5fe9c56
     # build:  python setup.py sdist
