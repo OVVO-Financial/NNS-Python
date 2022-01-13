@@ -1,4 +1,5 @@
-# NNS-Python
+# NNS-Python ![tests](https://github.com/OVVO-Financial/NNS-Python/workflows/tests/badge.svg)
+
 Nonlinear Nonparametric Statistics
 
 
