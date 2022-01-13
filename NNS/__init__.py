@@ -23,4 +23,4 @@ from .SSD import NNS_SSD
 from .TSD import NNS_TSD
 from .Uni_SD_Routines import NNS_FSD_uni, NNS_SSD_uni, NNS_TSD_uni
 
-__version__ = "0.1.12"
+__version__ = "0.1.13"
