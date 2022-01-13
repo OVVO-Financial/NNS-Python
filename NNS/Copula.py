@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 import numpy as np
 import pandas as pd
 from mpl_toolkits.mplot3d import Axes3D
@@ -102,7 +105,7 @@ def NNS_copula(
     # Isolate the upper triangles from each of the partial moment matrices
     Co_pm = np.sum(np.triu(pm_cov["cupm"], 1)) + np.sum(np.triu(pm_cov["clpm"], 1))
     D_pm = np.sum(np.triu(pm_cov["dupm"], 1)) + np.sum(np.triu(pm_cov["dlpm"], 1))
-    if plot and n == 3:
+    if plot and n == 3 and plt is not None:
         fig = plt.figure(figsize=(4, 4))
         ax = fig.add_subplot(111, projection="3d")
         B = A.values if isinstance(A, pd.DataFrame) else A

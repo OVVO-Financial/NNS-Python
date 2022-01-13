@@ -7,7 +7,9 @@ from .Partial_Moments import LPM_ratio
 
 
 def _LPM_VaR(
-    percentile: [float, int], degree: [float, int, str, None], x: [pd.Series, np.ndarray, list]
+    percentile: [float, int],
+    degree: [float, int, str, None],
+    x: [pd.Series, np.ndarray, list],
 ) -> float:
     x_min = np.min(x)
     x_max = np.max(x)

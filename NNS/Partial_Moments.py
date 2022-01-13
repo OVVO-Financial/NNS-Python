@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-import matplotlib.pyplot as plt
+
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 import numba
 import numpy as np
 import pandas as pd
@@ -906,7 +910,7 @@ def NNS_CDF(
             )["Point.est"]
             CDF[np.isinf(CDF)] = P[1]
             P = P[-1]
-        if plot:
+        if plot and plt is not None:
             plt.title(_type.upper())
             plt.xlabel(variable.name if hasattr(variable, "name") else "X")
             plt.ylabel(ylabel)
@@ -1065,7 +1069,7 @@ def NNS_CDF(
         else:
             P = None
 
-        if plot:
+        if plot and plt is not None:
             fig = plt.figure(figsize=(4, 4))
             ax = fig.add_subplot(111, projection="3d")
             plt.title(_type.upper())

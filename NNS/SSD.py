@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-import matplotlib.pyplot as plt
+
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 import numpy as np
 import pandas as pd
 
@@ -32,7 +36,8 @@ def NNS_SSD(x: pd.Series, y: pd.Series, use_plot: bool = True) -> str:
     LPM_y_sort = LPM(1, Combined_sort, y)
     x_ssd_y = np.any(LPM_x_sort > LPM_y_sort)
     y_ssd_x = np.any(LPM_y_sort > LPM_x_sort)
-    if use_plot:
+
+    if use_plot and plt is not None:
         plt.title("SSD")
         plt.ylabel("Area of Cumulative Distribution")
         plt.plot(Combined_sort, LPM_x_sort, label="<Combined Sort> vs <LPM X Sort>")

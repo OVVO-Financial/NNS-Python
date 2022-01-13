@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import unittest
 
 import numpy as np
@@ -650,7 +651,7 @@ class TestPartialMoments(unittest.TestCase):
         np.testing.assert_almost_equal(b.values, np.cov(Test.T, ddof=0))
 
     def test_PM_matrix_csv(self):
-        df = pd.read_csv("pm_matrix_test.csv")
+        df = pd.read_csv(os.path.join(os.path.dirname(__file__), "pm_matrix_test.csv"))
         df = df[["x", "y", "z"]]
         df_np = df.values
         # pandas

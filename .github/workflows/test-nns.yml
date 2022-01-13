@@ -1,0 +1,39 @@
+name: test-nns
+
+on:
+  push:
+    branches: [ main, devel-spadim ]
+  pull_request:
+    branches: [ main, devel-spadim ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements.txt
+        python -m pip install pytest pytest-cov autoflake black isort
+    - name: Lint
+      run: |
+        python -m autoflake NNS/ tests/ --check --remove-unused-variables --remove-duplicate-keys --expand-star-imports --recursive
+        python -m black NNS/ tests/ --line-length=100 --target-version py37 --check
+        python -m isort --multi-line=3 --trailing-comma --force-grid-wrap=0 --combine-as --line-width 100 --interactive NNS/ tests/ --check
+      #python -m autoflake NNS/ tests/ -c --remove-all-unused-imports --remove-unused-variables --remove-duplicate-keys --expand-star-imports --recursive --in-place
+    - name: Test
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements.txt
+        python -m pip install --no-cache-dir --user -e .
+        python -m pip install --no-cache-dir --user -e .[plot]
+        python -m pip install --no-cache-dir --user -e .[test]
+        python -m pytest --cache-clear --cov=NNS --cov-report term-missing --cov-fail-under=70 ./tests/
