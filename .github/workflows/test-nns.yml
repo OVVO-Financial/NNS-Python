@@ -1,0 +1,35 @@
+name: test-nns
+
+on:
+  push:
+    branches: [ main, devel-spadim ]
+  pull_request:
+    branches: [ main, devel-spadim ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9, 3.10]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements.txt
+        python -m pip install pytest pytest-cov
+        python -m pip install nns
+    - name: Lint
+      run: |
+        python -m autoflake NNS/ tests/ --remove-all-unused-imports --remove-unused-variables --remove-duplicate-keys --expand-star-imports --recursive --in-place
+        python -m black NNS/ tests/ --line-length=100 --target-version py37
+        python -m isort --multi-line=3 --trailing-comma --force-grid-wrap=0 --combine-as --line-width 100 --interactive NNS/ tests/
+    - name: Test
+      run: |
+        python -m pip install --no-cache-dir --user -e .[test]
+        python -m pytest --cache-clear --cov=NNS --cov-report term-missing --cov-fail-under=70 ./tests/
