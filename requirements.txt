@@ -5,7 +5,7 @@ numba>=0.51.2
 setuptools>=54.2.0
 KDEpy>=1.1.0
 # [plot]
-# matplotlib>=3.3.2
+matplotlib>=3.3.2
 # [test]
-# pytest-cov>=2.10.0
-# pytest>=5.4.3
+pytest-cov>=2.10.0
+pytest>=5.4.3
