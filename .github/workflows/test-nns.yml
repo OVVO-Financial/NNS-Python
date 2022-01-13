@@ -22,7 +22,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install -r requirements.txt
-        python -m pip install pytest pytest-cov
+        python -m pip install pytest pytest-cov autoflake black isort
         python -m pip install nns
     - name: Lint
       run: |
