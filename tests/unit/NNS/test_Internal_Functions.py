@@ -416,15 +416,15 @@ class TestInternalFunctions(unittest.TestCase):
         y1 = NNS.Internal_Functions.ARMA_seas_weighting(False, x)
         y2 = NNS.Internal_Functions.ARMA_seas_weighting(True, x)
 
-        self.assertTrue('lag' in y1 and 'Weights' in y1 and len(y1) == 2)
-        self.assertAlmostEqualArray(y1['lag'], y_false['lag'])
-        self.assertAlmostEqual(y1['Weights'], y_false['Weights'])
+        self.assertTrue("lag" in y1 and "Weights" in y1 and len(y1) == 2)
+        self.assertAlmostEqualArray(y1["lag"], y_false["lag"])
+        self.assertAlmostEqual(y1["Weights"], y_false["Weights"])
 
-        self.assertTrue('lag' in y2 and 'Weights' in y2 and len(y2) == 2)
-        self.assertAlmostEqual(y2['Weights'], y_true['Weights'])
-        self.assertAlmostEqual(y2['lag'], y_true['lag'])
-        #self.assertDictEqual(y_false, y1)
-        #self.assertDictEqual(y_true, y2)
+        self.assertTrue("lag" in y2 and "Weights" in y2 and len(y2) == 2)
+        self.assertAlmostEqual(y2["Weights"], y_true["Weights"])
+        self.assertAlmostEqual(y2["lag"], y_true["lag"])
+        # self.assertDictEqual(y_false, y1)
+        # self.assertDictEqual(y_true, y2)
 
     def test_lag_mtx(self):
         pass
