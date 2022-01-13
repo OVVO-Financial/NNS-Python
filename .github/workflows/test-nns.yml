@@ -26,7 +26,7 @@ jobs:
         python -m pip install pytest pytest-cov autoflake black isort
     - name: Lint
       run: |
-        python -m autoflake NNS/ tests/ -c --remove-unused-variables --remove-duplicate-keys --expand-star-imports --recursive --in-place
+        python -m autoflake NNS/ tests/ --check --remove-unused-variables --remove-duplicate-keys --expand-star-imports --recursive
         python -m black NNS/ tests/ --line-length=100 --target-version py37 --check
         python -m isort --multi-line=3 --trailing-comma --force-grid-wrap=0 --combine-as --line-width 100 --interactive NNS/ tests/ --check
       #python -m autoflake NNS/ tests/ -c --remove-all-unused-imports --remove-unused-variables --remove-duplicate-keys --expand-star-imports --recursive --in-place
