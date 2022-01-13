@@ -2,9 +2,8 @@
 import numpy as np
 import pandas as pd
 
-from .Copula import NNS_copula
-from .Partial_Moments import LPM, UPM
-from .Partition_Map import NNS_part
+from NNS.Partial_Moments import LPM, UPM
+from NNS_Todo.Partition_Map import NNS_part
 
 
 def NNS_dep(x: [np.ndarray, pd.Series], y: [np.ndarray, pd.Series, None]=None, asym: bool=False,p_value: bool=False,print_map: bool=False) -> dict:
