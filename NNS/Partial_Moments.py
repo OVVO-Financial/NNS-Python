@@ -172,17 +172,17 @@ def _Co_UPM(
         target_x = getattr(np, target_x)(x)
     if isinstance(target_y, str):  # "mean"
         target_y = getattr(np, target_y)(y)
+    if isinstance(x, list):
+        x = np.array(x)
+    if isinstance(y, list):
+        y = np.array(y)
 
-    z = pd.DataFrame({"x": x, "y": y})
-    z["x"] = z["x"] - target_x
-    z["y"] = z["y"] - target_y
-
-    z.loc[z["x"] <= 0, "x"] = np.nan
-    z.loc[z["y"] <= 0, "y"] = np.nan
-
-    z.dropna(inplace=True)
-
-    return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / len(x)
+    _x = x - target_x
+    _y = y - target_y
+    remove = ~((_x <= 0) | (_y <= 0))
+    _x = _x[remove]
+    _y = _y[remove]
+    return ((_x ** degree_x).dot(_y ** degree_y)) / len(x)
 
 
 # Co.UPM <- Vectorize(Co.UPM, vectorize.args = c('target.x', 'target.y'))
@@ -253,18 +253,17 @@ def _Co_LPM(
         target_x = getattr(np, target_x)(x)
     if isinstance(target_y, str):  # "mean"
         target_y = getattr(np, target_y)(y)
+    if isinstance(x, list):
+        x = np.array(x)
+    if isinstance(y, list):
+        y = np.array(y)
 
-    z = pd.DataFrame({"x": x, "y": y})
-    # z <- t(c(target.x, target.y) - t(z))
-    z["x"] = target_x - z["x"]
-    z["y"] = target_y - z["y"]
-
-    z.loc[z["x"] <= 0, "x"] = np.nan
-    z.loc[z["y"] <= 0, "y"] = np.nan
-
-    z.dropna(inplace=True)
-
-    return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / len(x)
+    _x = np.maximum(0, target_x - x)
+    _y = np.maximum(0, target_y - y)
+    remove = ~((_x <= 0) | (_y <= 0))
+    _x = _x[remove]
+    _y = _y[remove]
+    return ((_x ** degree_x).dot(_y ** degree_y)) / len(x)
 
 
 # Co.LPM <- Vectorize(Co.LPM, vectorize.args = c('target.x', 'target.y'))
@@ -335,19 +334,17 @@ def _D_LPM(
         target_x = getattr(np, target_x)(x)
     if isinstance(target_y, str):  # "mean"
         target_y = getattr(np, target_y)(y)
+    if isinstance(x, list):
+        x = np.array(x)
+    if isinstance(y, list):
+        y = np.array(y)
 
-    z = pd.DataFrame({"x": x, "y": y})
-    #   z[,1] <- z[,1] - target.x
-    #   z[,2] <- target.y - z[,2]
-    z["x"] = z["x"] - target_x
-    z["y"] = target_y - z["y"]
-
-    z.loc[z["x"] <= 0, "x"] = np.nan
-    z.loc[z["y"] <= 0, "y"] = np.nan
-
-    z.dropna(inplace=True)
-
-    return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / len(x)
+    _x = x - target_x
+    _y = target_y - y
+    remove = ~((_x <= 0) | (_y <= 0))
+    _x = _x[remove]
+    _y = _y[remove]
+    return ((_x ** degree_x).dot(_y ** degree_y)) / len(x)
 
 
 # D.LPM <- Vectorize(D.LPM, vectorize.args = c('target.x', 'target.y'))
@@ -418,18 +415,17 @@ def _D_UPM(
         target_x = getattr(np, target_x)(x)
     if isinstance(target_y, str):  # "mean"
         target_y = getattr(np, target_y)(y)
-    z = pd.DataFrame({"x": x, "y": y})
-    # z[,1] <- target.x - z[,1]
-    # z[,2] <- z[,2] - target.y
-    z["x"] = target_x - z["x"]
-    z["y"] = z["y"] - target_y
+    if isinstance(x, list):
+        x = np.array(x)
+    if isinstance(y, list):
+        y = np.array(y)
 
-    z.loc[z["x"] <= 0, "x"] = np.nan
-    z.loc[z["y"] <= 0, "y"] = np.nan
-
-    z.dropna(inplace=True)
-
-    return (z["x"] ** degree_x).dot(z["y"] ** degree_y) / len(x)
+    _x = target_x - x
+    _y = y - target_y
+    remove = ~((_x <= 0) | (_y <= 0))
+    _x = _x[remove]
+    _y = _y[remove]
+    return ((_x ** degree_x).dot(_y ** degree_y)) / len(x)
 
 
 # D.UPM <- Vectorize(D.UPM, vectorize.args = c('target.x', 'target.y'))
@@ -754,7 +750,6 @@ def NNS_PDF(
     bins: [float, int, None] = None,
     plot: bool = True,
 ) -> pd.DataFrame:
-    # TODO: CONVERT/TEST
     if target is None:
         target = variable.sort_values()
     # d/dx approximation
@@ -767,7 +762,7 @@ def NNS_PDF(
         d_dx = (np.abs(np.max(target)) + np.abs(np.min(target))) / bins
         tgt = np.arange(np.min(target), np.max(target), d_dx)
 
-    # TODO: Check return of function CDF and ['function'] dict
+    # Function only exists with single variable, and it's type is a series
     CDF = NNS_CDF(variable=variable, degree=degree, target=None, type="CDF", plot=False)["Function"]
 
     # TODO: find function dy.dx()
@@ -864,14 +859,8 @@ def NNS_CDF(
         if degree > 0:
             CDF = LPM_ratio(degree=degree, target=overall_target, variable=variable)
         else:
-            # TODO: ecdf function
             cdf_fun = Internal_Functions.ecdf_function(x)
             CDF = cdf_fun(overall_target)
-
-        # if hasattr(variable, 'name'):
-        #    values = pd.DataFrame({variable.name: overall_target, "CDF": CDF})
-        # else:
-        #    values = pd.DataFrame({0: overall_target, "CDF": CDF})
 
         if target is not None:
             P = LPM_ratio(degree=degree, target=target, variable=variable)
