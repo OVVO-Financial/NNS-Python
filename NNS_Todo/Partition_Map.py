@@ -1,16 +1,22 @@
 # -*- coding: utf-8 -*-
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 import numpy as np
 import pandas as pd
 
 
 def NNS_part(
-    x: [np.ndarray, pd.Series], y: [np.ndarray, pd.Series],
-    Voronoi: bool=False,
-    _type=None,
-    order=None,
+    x: [np.ndarray, pd.Series, list],
+    y: [np.ndarray, pd.Series, list],
+    Voronoi: bool = False,
+    _type: [None, str] = None, # XONLY / None
+    order: [int, str, None] = None, # "max" / number / None
     obs_req: int = 8,
     min_obs_stop: bool = True,
-    noise_reduction: str = "off"
+    noise_reduction: str = "off",
+    **kwargs,
 ):
     """
     NNS Partition Map
@@ -57,7 +63,8 @@ def NNS_part(
     DT
     @export
     """
-
+    if "type" in kwargs:
+        _type = kwargs['kwargs']
 
     noise_reduction = noise_reduction.lower()
     if noise_reduction not in ["mean", "median", "mode", "off", "mode_class"]:
@@ -65,71 +72,107 @@ def NNS_part(
 
     if isinstance(x, pd.Series):
         x = x.values
+    elif isinstance(x, list):
+        x = np.array(x)
     if isinstance(y, pd.Series):
         y = y.values
+    elif isinstance(y, list):
+        y = np.array(y)
 
     if obs_req is None:
         obs_req = 8
 
-    if not order is None and order == 0:
+    if order is not None and not isinstance(order, str) and order == 0:
         order = 1
-    if Voronoi:
-        # TODO
-        x.label = deparse(substitute(x))
-        y.label = deparse(substitute(y))
 
-    # TODO
-    PART = data.table::data.table(
-        x, y,
-        quadrant = "q",
-        prior.quadrant = "pq"
-    )[, `:=`(counts, .N), by = "quadrant"][, `:=`(old.counts, .N), by = "prior.quadrant"]
+    x_label = x.name if hasattr(x, 'name') else 'X'
+    y_label = y.name if hasattr(y, 'name') else 'Y'
+    x_len = len(x)
 
-    if Voronoi:
+    PART = pd.DataFrame.from_dict(
+        {
+            "x": x,
+            "y": y,
+            "quadrant": ['q'] * x_len,
+            "prior.quadrant": ["pq"] * x_len,
+            "counts": [x_len] * x_len,
+            "old.counts": [x_len] * x_len,
+        }
+    )
+    #PART = data.table::data.table(
+    #    x, y,
+    #    quadrant = "q",
+    #    prior.quadrant = "pq"
+    #)[, `:=`(counts, .N), by = "quadrant"][, `:=`(old.counts, .N), by = "prior.quadrant"]
+
+    if Voronoi and plt is not None:
         # TODO: matplotlib
-        plot(x, y, col = "steelblue", cex.lab = 1.5, xlab = x.label, ylab = y.label)
+        plt.plot(
+            x,
+            y,
+            color="steelblue",
+            #cex.lab = 1.5, xlab = x.label, ylab = y.label
+        )
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        #plt.plot(x, y, col = "steelblue", cex.lab = 1.5, xlab = x.label, ylab = y.label)
 
-    if x.shape[0] <= 8:
+    if x_len <= 8:
         if order is None:
             order = 1
-            hard_stop = max(np.ceil(np.log(x.shape[0], 2)), 1)
+            hard_stop = max(np.ceil(np.log(x_len, 2)), 1)
         else:
             obs_req = 0
-            hard_stop = x.shape[0]
+            hard_stop = x_len
 
     if order is None:
-        order = np.max(np.ceil(np.log(x.shape[0], 2)), 1)
+        order = np.max(np.ceil(np.log(x_len, 2)), 1)
 
     # TODO is numeric?
     #if(!is.numeric(order)):
-    if False:
+    if order == 'max':
         obs_req = 0
-        hard_stop = np.max(np.ceil(np.log(x.shape[0], 2)), 1) + 2
+        hard_stop = np.max(np.ceil(np.log(x_len, 2)), 1) + 2
     else:
         #obs_req = obs_req
-        hard_stop = 2*np.max(np.ceil(np.log(x.shape[0], 2)), 1) + 2
+        hard_stop = 2 * np.max(np.ceil(np.log(x_len, 2)), 1) + 2
 
     RP = None
     if _type is None:
         i = 0
-        while (i >= 0):
+        while i >= 0:
             if i == order or i == hard_stop:
                 break
-            # TODO
-            PART[counts >= obs_req, `:=`(counts, .N), by = quadrant]
-            PART[old_counts >= obs_req, `:=`(old_counts, .N), by = prior_quadrant]
-            l_PART = max(PART$counts)
+            # TODO (check if this is correct, and if we can improve it)
+            filter1 = (PART['counts'] >= obs_req)
+            filter2 = (PART['old_counts'] >= obs_req)
+            tmp1 = PART[filter1]['quadrant'].groupby('quadrant').count()
+            tmp2 = PART[filter2]['prior_quadrant'].groupby('prior_quadrant').count()
+            for tmp_index in tmp1.index:
+                PART.loc[
+                    filter1 & (PART['quadrant'] == tmp_index),
+                    "counts"
+                ] = tmp1[tmp_index]
+            for tmp_index in tmp2.index:
+                PART.loc[
+                    filter2 & (PART['prior_quadrant'] == tmp_index),
+                    "old_counts"
+                ] = tmp2[tmp_index]
 
-            obs_req_rows = PART[counts >= obs_req, which = TRUE]
-            old_obs_req_rows = PART[old_counts >= obs_req, which = TRUE]
+            #PART[counts >= obs_req, `:=`(counts, .N), by = quadrant]
+            #PART[old_counts >= obs_req, `:=`(old_counts, .N), by = prior_quadrant]
+            l_PART = PART['counts'].max()
 
-            if len(obs_req_rows)==0:
+            obs_req_rows = PART[PART['counts'] >= obs_req]
+            old_obs_req_rows = PART[PART['old_counts'] >= obs_req]
+
+            if len(obs_req_rows) == 0:
                 break
             if min_obs_stop and obs_req > 0 and (len(obs_req_rows) < len(old_obs_req_rows)):
                 break
 
             if noise_reduction == "off":
-                if Voronoi:
+                if Voronoi and plt is not None:
                     if l_PART > obs_req:
                         PART[obs_req_rows, {
                                 segments(min(x), gravity(y), max(x), gravity(y), lty = 3)
@@ -143,7 +186,7 @@ def NNS_part(
                 ]
 
             if noise.reduction == "mean":
-                if Voronoi:
+                if Voronoi and plt is not None:
                     if l_PART > obs_req:
                         PART[
                             obs.req.rows, {
@@ -158,7 +201,7 @@ def NNS_part(
                 ]
 
             if noise_reduction == "median":
-                if Voronoi:
+                if Voronoi and plt is not None:
                     if l_PART > obs_req:
                         PART[
                             obs.req.rows, {
@@ -175,7 +218,7 @@ def NNS_part(
                 ]
 
             if noise_reduction == "mode":
-                if Voronoi:
+                if Voronoi and plt is not None:
                     if l_PART > obs_req:
                         PART[
                             obs.req.rows, {
@@ -192,7 +235,7 @@ def NNS_part(
                 ]
 
             if noise_reduction == "mode_class":
-                if Voronoi:
+                if Voronoi and plt is not None:
                     if l_PART > obs_req:
                         PART[
                             obs.req.rows, {
@@ -241,7 +284,7 @@ def NNS_part(
 
         PART[, `:=`(counts = NULL, old.counts = NULL, q_new = NULL)]
         RP = data.table::setorder(RP[], quadrant)[]
-        if Voronoi:
+        if Voronoi and plt is not None:
             # TODO: Matplotlib
             title(main = paste0("NNS Order = ", i), cex.main = 2)
             if min_obs_stop:
@@ -343,7 +386,7 @@ def NNS_part(
             ]) < .33 * len(x):
             RP$x = ifelse(RP$x%%1 < .5, floor(RP$x), ceiling(RP$x))
 
-        if Voronoi:
+        if Voronoi and plt is not None:
             abline(v = c(PART[ ,min(x), by=prior.quadrant]$V1,max(x)), lty = 3)
             if min_obs_stop:
                 points(RP$x, RP$y, pch = 15, lwd = 2, col = "red")

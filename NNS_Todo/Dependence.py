@@ -2,8 +2,8 @@
 import numpy as np
 import pandas as pd
 
-from NNS.Partial_Moments import LPM, UPM
-from NNS_Todo.Partition_Map import NNS_part
+from .Partial_Moments import LPM, UPM
+from .Partition_Map import NNS_part
 
 
 def NNS_dep(x: [np.ndarray, pd.Series], y: [np.ndarray, pd.Series, None]=None, asym: bool=False,p_value: bool=False,print_map: bool=False) -> dict:
@@ -57,7 +57,7 @@ def NNS_dep(x: [np.ndarray, pd.Series], y: [np.ndarray, pd.Series, None]=None, a
         l = x.shape[0]
 
         #y <- as.numeric(y)
-        obs = max(10, l/5)
+        obs = max(10, l / 5)
 
         # Define segments
         if print_map:
